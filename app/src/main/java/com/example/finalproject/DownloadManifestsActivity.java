@@ -9,7 +9,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Button;
 
-public class DownloadManifests extends AppCompatActivity {
+public class DownloadManifestsActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,7 +30,7 @@ public class DownloadManifests extends AppCompatActivity {
         Button button = (Button) findViewById(R.id.button_continue);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Intent myIntent = new Intent(DownloadManifests.this, BarcodeScan.class);
+                Intent myIntent = new Intent(DownloadManifestsActivity.this, BarcodeScanActivity.class);
                 startActivity(myIntent);
             }
         });
