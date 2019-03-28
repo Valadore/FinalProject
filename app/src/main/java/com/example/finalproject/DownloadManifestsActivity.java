@@ -15,17 +15,8 @@ public class DownloadManifestsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_download_manifests);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
 
         Button button = (Button) findViewById(R.id.button_continue);
         button.setOnClickListener(new View.OnClickListener() {
@@ -36,4 +27,13 @@ public class DownloadManifestsActivity extends AppCompatActivity {
         });
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
+
+    //we are going to eventually download manifests from the server
+
+    //for now we can read from local folder
+
+    //need names here to select what ones to download
+    //then download and add to file structure
+
+
 }
