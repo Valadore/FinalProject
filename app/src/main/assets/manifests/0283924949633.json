@@ -1,0 +1,60 @@
+{
+   "FLAT 2 43 MILLBAY ROAD": [
+      {
+         "Postcode": "PL1  3NJ",
+         "Parcel type": "Standard Parcel",
+         "Name": "MR R SCRACE",
+         "Phonenumber": "01752 765889",
+         "Client": "NEXT",
+         "Delivery type": "SUN  ",
+         "Barcode": "83-924-71-75494750-9"
+      },
+      {
+         "Postcode": "PL1  3NJ",
+         "Parcel type": "Standard Parcel",
+         "Name": "MR R SCRACE",
+         "Phonenumber": "01752 765889",
+         "Client": "NEXT",
+         "Delivery type": "SUN  ",
+         "Barcode": "83-924-71-75493750-0"
+      },
+      {
+         "Postcode": "PL1  3NJ",
+         "Parcel type": "Standard Parcel",
+         "Name": "MR R SCRACE",
+         "Phonenumber": "01752 765889",
+         "Client": "NEXT",
+         "Delivery type": "SUN  ",
+         "Barcode": "83-924-71-75489750-7"
+      },
+      {
+         "Postcode": "PL1  3NJ",
+         "Parcel type": "Standard Parcel",
+         "Name": "MR R SCRACE",
+         "Phonenumber": "01752 765889",
+         "Client": "NEXT",
+         "Delivery type": "SUN  ",
+         "Barcode": "83-924-71-75488750-8"
+      },
+      {
+         "Postcode": "PL1  3NJ",
+         "Parcel type": "Standard Parcel",
+         "Name": "MR R SCRACE",
+         "Phonenumber": "01752 765889",
+         "Client": "NEXT",
+         "Delivery type": "SUN  ",
+         "Barcode": "83-924-71-75456750-9"
+      }
+   ],
+   "FLAT 13 48 DURNFORD STREET": [
+      {
+         "Postcode": "PL1  3QN",
+         "Parcel type": "Standard Parcel",
+         "Name": "MISS E L Hops",
+         "Phonenumber": "07585 412765",
+         "Client": "NEXT",
+         "Delivery type": "SUN  ",
+         "Barcode": "83-924-71-75883750-9"
+      }
+   ]
+}

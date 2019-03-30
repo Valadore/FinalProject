@@ -1,0 +1,20 @@
+{
+   "236 Fore Street": {
+      "Postcode": "PL1  4FS",
+      "Parcel type": "Standard Parcel",
+      "Name": "Tiana Blacks",
+      "Phonenumber": "44792 6781354",
+      "Client": "ZO10",
+      "Delivery type": "NDAY  ",
+      "Barcode": "63-897-71-53808517-8"
+   },
+   "7 Mills Road": {
+      "Postcode": "PL1  4NF",
+      "Parcel type": "Packet",
+      "Name": "Kerrylee chester",
+      "Phonenumber": "44746 3411255",
+      "Client": "ZO10",
+      "Delivery type": "NDAY  ",
+      "Barcode": "63-897-71-53808847-6"
+   }
+}

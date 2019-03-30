@@ -1,0 +1,100 @@
+{
+   "10 ENDEAVOUR COURT": [
+      {
+         "Postcode": "PL1  5AX",
+         "Parcel type": "Packet",
+         "Name": "EVA josack",
+         "Phonenumber": "07548 434524",
+         "Client": "PLT ",
+         "Delivery type": "NDAY  ",
+         "Barcode": "63-153-71-89352156-1"
+      }
+   ],
+   "92 ENDEAVOUR COURT": [
+      {
+         "Postcode": "PL1  5AX",
+         "Parcel type": "Standard Parcel",
+         "Name": "MR G Harper",
+         "Phonenumber": "01752 233467",
+         "Client": "NEXT",
+         "Delivery type": "SUN  ",
+         "Barcode": "83-153-71-75498750-9"
+      },
+      {
+         "Postcode": "PL1  5AX",
+         "Parcel type": "Standard Parcel",
+         "Name": "MR G Harper",
+         "Phonenumber": "01752 233467",
+         "Client": "NEXT",
+         "Delivery type": "SUN  ",
+         "Barcode": "83-153-71-75554750-4"
+      },
+      {
+         "Postcode": "PL1  5AX",
+         "Parcel type": "Standard Parcel",
+         "Name": "MR G Harper",
+         "Phonenumber": "01752 233467",
+         "Client": "NEXT",
+         "Delivery type": "SUN  ",
+         "Barcode": "83-153-71-75552750-6"
+      },
+      {
+         "Postcode": "PL1  5AX",
+         "Parcel type": "Standard Parcel",
+         "Name": "MR G Harper",
+         "Phonenumber": "01752 233467",
+         "Client": "NEXT",
+         "Delivery type": "SUN  ",
+         "Barcode": "83-153-71-75553750-5"
+      },
+      {
+         "Postcode": "PL1  5AX",
+         "Parcel type": "Standard Parcel",
+         "Name": "MR G Harper",
+         "Phonenumber": "01752 233467",
+         "Client": "NEXT",
+         "Delivery type": "SUN  ",
+         "Barcode": "83-153-71-75543750-8"
+      },
+      {
+         "Postcode": "PL1  5AX",
+         "Parcel type": "Standard Parcel",
+         "Name": "MR G Harper",
+         "Phonenumber": "01752 233467",
+         "Client": "NEXT",
+         "Delivery type": "SUN  ",
+         "Barcode": "83-153-71-75545750-6"
+      },
+      {
+         "Postcode": "PL1  5AX",
+         "Parcel type": "Standard Parcel",
+         "Name": "MR G Harper",
+         "Phonenumber": "01752 233467",
+         "Client": "NEXT",
+         "Delivery type": "SUN  ",
+         "Barcode": "83-153-71-75544750-7"
+      }
+   ],
+   "197 Stuart Road": [
+      {
+         "Postcode": "PL1  5LQ",
+         "Parcel type": "Packet",
+         "Name": "James down",
+         "Phonenumber": "07502 231339",
+         "Client": "JDS ",
+         "Delivery type": "NDAY  ",
+         "Barcode": "63-153-71-80888967-0"
+      }
+   ],
+   "BASEMENT FLAT": [
+      {
+         "Postcode": "PL1  5NB",
+         "Parcel type": "Standard Parcel",
+         "Name": "MR david shanks",
+         "Phonenumber": "01752 324213",
+         "Client": "GSOL",
+         "Delivery type": "NDAY  ",
+         "Barcode": "63-153-71-43078097-0"
+      }
+   ]
+}

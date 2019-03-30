@@ -1,0 +1,20 @@
+{
+   "3 HALFPENNY COURT": {
+      "Postcode": "PL1  3GF",
+      "Parcel type": "Packet",
+      "Name": "MR rick derge",
+      "Phonenumber": "07858 424251",
+      "Client": "JDW ",
+      "Delivery type": "NDAY  ",
+      "Barcode": "63-082-71-14094905-9"
+   },
+   "15 Arundel Crescent": {
+      "Postcode": "PL1  5DY",
+      "Parcel type": "Standard Parcel",
+      "Name": "Toby logan",
+      "Phonenumber": "07884 213144",
+      "Client": "THG ",
+      "Delivery type": "NDAY  ",
+      "Barcode": "63-082-71-70655707-0"
+   }
+}
