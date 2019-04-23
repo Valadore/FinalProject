@@ -1,6 +1,7 @@
 package com.example.finalproject;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,10 +11,12 @@ import android.widget.ListAdapter;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class ManifestListAdapter extends BaseAdapter implements ListAdapter {
     private ArrayList<String> list = new ArrayList<String>();
     private Context context;
+    private List<String> manifests = new ArrayList<String>();
 
 
 
@@ -37,6 +40,10 @@ public class ManifestListAdapter extends BaseAdapter implements ListAdapter {
         return 0;
     }
 
+    public List<String> getManifests()
+    {
+        return manifests;
+    }
 
     @Override
     public View getView(final int position, View convertView, ViewGroup parent) {
@@ -51,11 +58,12 @@ public class ManifestListAdapter extends BaseAdapter implements ListAdapter {
         listItemText.setText(list.get(position));
 
         //Handle buttons and add onClickListeners
-        Button deleteBtn = (Button)view.findViewById(R.id.download_btn);
+        Button downloadBtn = (Button)view.findViewById(R.id.download_btn);
 
-        deleteBtn.setOnClickListener(new View.OnClickListener(){
+        downloadBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
+                manifests.add(list.get(position));
                 //do something
                 list.remove(position); //or some other task
                 notifyDataSetChanged();

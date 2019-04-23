@@ -1,30 +1,38 @@
 package com.example.finalproject;
 
-import android.media.Image;
+import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.ForeignKey;
+import android.arch.persistence.room.PrimaryKey;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import java.sql.Time;
 import java.util.Date;
 
+@Entity(foreignKeys = @ForeignKey(entity = Job.class,
+                                    parentColumns = "jobID",
+                                    childColumns =  "jobID"))
 public class Parcel {
+    @NonNull
+    @PrimaryKey
     private String parcelBarcode;
     private String status;
-    @Nullable private Image signiture;
-    @Nullable private Image photo;
+    private String jobID;
+    @Nullable private String signatureFileName;
+    @Nullable private String photoFileName;
     @Nullable private String GPS;
     @Nullable private Date time;
 
     public Parcel() {}
 
-    //only the barcode and status are set on creation
-    public Parcel(String parcelBarcode, String status)
-    {
+    public Parcel(@NonNull String parcelBarcode, String status, String jobID) {
         this.parcelBarcode = parcelBarcode;
         this.status = status;
+        this.jobID = jobID;
     }
 
     //------Getters----------------
 
+    public String getJobID() { return jobID; }
 
     public String getParcelBarcode() {
         return parcelBarcode;
@@ -35,13 +43,13 @@ public class Parcel {
     }
 
     @Nullable
-    public Image getSigniture() {
-        return signiture;
+    public String getSignatureFileName() {
+        return signatureFileName;
     }
 
     @Nullable
-    public Image getPhoto() {
-        return photo;
+    public String getPhotoFileName() {
+        return photoFileName;
     }
 
     @Nullable
@@ -56,8 +64,9 @@ public class Parcel {
 
     //-------- Setters -----------
 
+    public void setJobID(String jobID) { this.jobID = jobID; }
 
-    public void setParcelBarcode(String parcelBarcode) {
+    public void setParcelBarcode(@NonNull String parcelBarcode) {
         this.parcelBarcode = parcelBarcode;
     }
 
@@ -65,12 +74,12 @@ public class Parcel {
         this.status = status;
     }
 
-    public void setSigniture(@Nullable Image signiture) {
-        this.signiture = signiture;
+    public void setSignatureFileName(@Nullable String signatureFileName) {
+        this.signatureFileName = signatureFileName;
     }
 
-    public void setPhoto(@Nullable Image photo) {
-        this.photo = photo;
+    public void setPhotoFileName(@Nullable String photoFileName) {
+        this.photoFileName = photoFileName;
     }
 
     public void setGPS(@Nullable String GPS) {

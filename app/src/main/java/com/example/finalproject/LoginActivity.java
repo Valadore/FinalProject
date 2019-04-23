@@ -334,6 +334,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             showProgress(false);
 
             if (success) {
+
                 //switch to welcome screen
                 Intent myIntent = new Intent(LoginActivity.this, WelcomeActivity.class);
                 startActivity(myIntent);

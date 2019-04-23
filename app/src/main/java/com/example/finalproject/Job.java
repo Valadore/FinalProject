@@ -1,7 +1,15 @@
 package com.example.finalproject;
-import com.example.finalproject.Parcel;
+import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.ForeignKey;
+import android.arch.persistence.room.PrimaryKey;
+import android.support.annotation.NonNull;
 
+@Entity(foreignKeys = @ForeignKey(entity = Round.class,
+                                    parentColumns = "roundID",
+                                    childColumns =  "roundID"))
 public class Job {
+    @NonNull
+    @PrimaryKey
     private String jobID;
     private String jobType;
     private String name;
@@ -10,11 +18,11 @@ public class Job {
     private String phoneNumber;
     private String status;
     private String client;
-    private Parcel[] parcels;
+    private String roundID;
 
     public Job() {}
 
-    public Job(String jobID, String jobType, String name, String postcode, String address, String phoneNumber, String status, String client, Parcel[] parcels) {
+    public Job(@NonNull String jobID, String jobType, String name, String postcode, String address, String phoneNumber, String status, String client, String roundID) {
         this.jobID = jobID;
         this.jobType = jobType;
         this.name = name;
@@ -22,11 +30,13 @@ public class Job {
         this.address = address;
         this.phoneNumber = phoneNumber;
         this.status = status;
-        this.parcels = parcels;
         this.client = client;
+        this.roundID = roundID;
     }
 
     //---------- Getters -------------------
+
+    public String getRoundID() { return roundID; }
 
     public String getJobID() {
         return jobID;
@@ -56,17 +66,15 @@ public class Job {
         return status;
     }
 
-    public Parcel[] getParcels() {
-        return parcels;
-    }
-
     public String getClient() {
         return client;
     }
 
     //------------- Setters ---------------
 
-    public void setJobID(String jobID) {
+    public void setRoundID(String roundID) { this.roundID = roundID; }
+
+    public void setJobID(@NonNull String jobID) {
         this.jobID = jobID;
     }
 
@@ -92,10 +100,6 @@ public class Job {
 
     public void setStatus(String status) {
         this.status = status;
-    }
-
-    public void setParcels(Parcel[] parcels) {
-        this.parcels = parcels;
     }
 
     public void setClient(String client) {
