@@ -15,7 +15,7 @@ public class Session{
     private Date date;
     private String status;
 
-    public Session() {    }
+    public Session() { }
 
     public Session(@NonNull String sessionID, String userID, Date date, String status) {
         this.sessionID = sessionID;

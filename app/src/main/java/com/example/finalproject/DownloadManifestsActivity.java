@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -18,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 public class DownloadManifestsActivity extends AppCompatActivity {
@@ -40,10 +42,6 @@ public class DownloadManifestsActivity extends AppCompatActivity {
         //handle listview and assign adapter
         ListView lView = (ListView)findViewById(R.id.manifest_list);
         lView.setAdapter(adapter);
-
-        //build database
-        AppDatabase db = Room.databaseBuilder(getApplicationContext(),
-                AppDatabase.class, "database").build();
 
         Button button = (Button) findViewById(R.id.button_continue);
         button.setOnClickListener(new View.OnClickListener() {
@@ -73,42 +71,73 @@ public class DownloadManifestsActivity extends AppCompatActivity {
     }
 
     //This is where we build the manifest database
+    //may have to make this asynchronous, don't want to crash main thread!!!
     private void buildManifests( List<String> manifests)
     {
+        //temp session ID will be static!!!!
+        String sessionID = "7681250419";
+
+        //build database !!!!temp useing main thread need to change!!!!!!!!!!
+        AppDatabase db = Room.databaseBuilder(getApplicationContext(),
+                AppDatabase.class, "database").allowMainThreadQueries().build();
+
+        Date d = new Date();
+
+        Session newSession = new Session();
+        newSession.setSessionID(sessionID);
+        newSession.setUserID("7681");
+        newSession.setDate(d);
+        newSession.setStatus("Incomplete");
+        db.myDao().createSession(newSession);
+
         //for each manifest lets 'download'
         for (String manifest : manifests) {
 
+            //this is where we make a new round
+            Round newRound = new Round();
+            String roundId = manifest.replace(".json", "");
+
+            newRound.setRoundID(roundId);
+            newRound.setStatus("Incomplete");
+            newRound.setSessionID(sessionID);
+
+            //add new round to the database
+            db.myDao().createRound(newRound);
+
+            Log.d("test database!", (db.myDao().getJobByID(roundId).getStatus()));
+
+            //--------------------------------
             try {
+                //this is for the debug app on live we would download here
                 JSONObject manifestObj = new JSONObject(readJSONFromAsset(manifest));
+
                 Log.d("test", String.valueOf(manifestObj.names()));
                 int size1 = manifestObj.names().length();
                 //get each key
                 for (int i=0; i<size1; i++)
                 {
+                    //this is where we make new job
+
+
+                    //-----------------------------
                     //get each list of parcels
                     JSONArray jsonData = manifestObj.getJSONArray((String) manifestObj.names().get(i));
                     int size2 = jsonData.length();
                     for (int y=0; y<size2; y++)
                     {
+                        //this is each parcel we add
+
+
+                        //--------------------------
                         //address
                         Log.d("test", String.valueOf(manifestObj.names().get(i)));
                         //details
                         Log.d("test", String.valueOf(jsonData.get(y)));
                     }
-                    //address
-                    //Log.d("test", String.valueOf(manifestObj.names().get(i)));
-                    //details
-                   // Log.d("test", String.valueOf(jsonData));
-
-                    //manifestObj.names().get(i);
-
                 }
-
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-
-
         }
     }
 
