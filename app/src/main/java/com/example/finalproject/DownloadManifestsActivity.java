@@ -1,6 +1,7 @@
 package com.example.finalproject;
 
 import android.arch.persistence.room.Room;
+import android.arch.persistence.room.RoomDatabase;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -74,12 +75,16 @@ public class DownloadManifestsActivity extends AppCompatActivity {
     //may have to make this asynchronous, don't want to crash main thread!!!
     private void buildManifests( List<String> manifests)
     {
-        //temp session ID will be static!!!!
-        String sessionID = "7681250419";
 
         //build database !!!!temp useing main thread need to change!!!!!!!!!!
         AppDatabase db = Room.databaseBuilder(getApplicationContext(),
-                AppDatabase.class, "database").allowMainThreadQueries().build();
+                AppDatabase.class, "sessionDatabase").allowMainThreadQueries().build();
+
+        db.clearAllTables();
+
+        //temp session ID will be static!!!!
+        String sessionID = "7681250419";
+
 
         Date d = new Date();
 
@@ -90,6 +95,9 @@ public class DownloadManifestsActivity extends AppCompatActivity {
         newSession.setStatus("Incomplete");
         db.myDao().createSession(newSession);
 
+        int numrounds = 0;
+        int numjobs = 0;
+        int numparcels = 0;
         //for each manifest lets 'download'
         for (String manifest : manifests) {
 
@@ -102,24 +110,54 @@ public class DownloadManifestsActivity extends AppCompatActivity {
             newRound.setSessionID(sessionID);
 
             //add new round to the database
+            numrounds++;
+            Log.d("Number of Rounds", String.valueOf(numrounds));
             db.myDao().createRound(newRound);
-
-            Log.d("test database!", (db.myDao().getJobByID(roundId).getStatus()));
 
             //--------------------------------
             try {
                 //this is for the debug app on live we would download here
                 JSONObject manifestObj = new JSONObject(readJSONFromAsset(manifest));
 
-                Log.d("test", String.valueOf(manifestObj.names()));
+                //Log.d("Get each address name", String.valueOf(manifestObj.names()));
                 int size1 = manifestObj.names().length();
                 //get each key
                 for (int i=0; i<size1; i++)
                 {
                     //this is where we make new job
+                    Job newJob = new Job();
+                    String jobName = (String) manifestObj.names().get(i);
 
+                    //get each job
+                    JSONArray manifestObj2 = manifestObj.getJSONArray(jobName);
+                    JSONObject currentJob = manifestObj2.getJSONObject(0);
+
+                    String jobID = jobName;
+                    String jobType = (String) currentJob.get("Parcel type");
+                    String name = (String) currentJob.get("Name");
+                    String postcode = (String) currentJob.get("Postcode");
+                    String address = jobName;
+                    String phoneNumber = (String) currentJob.get("Phonenumber");
+                    String status = "Incomplete";
+                    String client = (String) currentJob.get("Client");
+
+                    newJob.setJobID(jobID);
+                    newJob.setJobType(jobType);
+                    newJob.setName(name);
+                    newJob.setPostcode(postcode);
+                    newJob.setAddress(address);
+                    newJob.setPhoneNumber(phoneNumber);
+                    newJob.setStatus(status);
+                    newJob.setClient(client);
+                    newJob.setRoundID(roundId);
+
+                    //add job to database
+                    numjobs++;
+                    Log.d("Number of jobs", String.valueOf(numjobs));
+                    db.myDao().createJob(newJob);
 
                     //-----------------------------
+
                     //get each list of parcels
                     JSONArray jsonData = manifestObj.getJSONArray((String) manifestObj.names().get(i));
                     int size2 = jsonData.length();
@@ -127,12 +165,28 @@ public class DownloadManifestsActivity extends AppCompatActivity {
                     {
                         //this is each parcel we add
 
+                        Parcel newParcel = new Parcel();
+                        JSONObject currentParcel = manifestObj2.getJSONObject(y);
+
+                        String parcelBarcode = (String) currentParcel.get("Barcode");
+                        String parcelType = (String) currentParcel.get("Parcel type");
+                        String parcelStatus = "Incomplete";
+                        String parcelJobID = jobName;
+
+                        newParcel.setParcelBarcode(parcelBarcode);
+                        newParcel.setParcelType(parcelType);
+                        newParcel.setStatus(parcelStatus);
+                        newParcel.setJobID(parcelJobID);
+
+                        numparcels++;
+                        Log.d("Number of parcels", String.valueOf(numparcels));
+                        db.myDao().createParcel(newParcel);
 
                         //--------------------------
                         //address
-                        Log.d("test", String.valueOf(manifestObj.names().get(i)));
+                        //Log.d("test", String.valueOf(manifestObj.names().get(i)));
                         //details
-                        Log.d("test", String.valueOf(jsonData.get(y)));
+                       // Log.d("test", String.valueOf(jsonData.get(y)));
                     }
                 }
             } catch (JSONException e) {

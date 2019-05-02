@@ -1,20 +1,24 @@
 {
-   "Beckley Point": {
-      "Postcode": "PL1  1LD",
-      "Parcel type": "Packet",
-      "Name": "Yara S aberdeen",
-      "Phonenumber": "44781 045323",
-      "Client": "PLT ",
-      "Delivery type": "NDAY  ",
-      "Barcode": "63-896-71-89352106-2"
-   },
-   "FLAT 12 161 163 NORTH ROAD WEST": {
-      "Postcode": "PL1  5BY",
-      "Parcel type": "Standard Parcel",
-      "Name": "stephen shive",
-      "Phonenumber": "07583 453233",
-      "Client": "AMAZ",
-      "Delivery type": "NDAY  ",
-      "Barcode": "63-896-71-97612689-4"
-   }
+   "Beckley Point": [
+		{
+		  "Postcode": "PL1  1LD",
+		  "Parcel type": "Packet",
+		  "Name": "Yara S aberdeen",
+		  "Phonenumber": "44781 045323",
+		  "Client": "PLT ",
+		  "Delivery type": "NDAY  ",
+		  "Barcode": "63-896-71-89352106-2"
+		}
+   ],
+   "FLAT 12 161 163 NORTH ROAD WEST": [
+		{
+		  "Postcode": "PL1  5BY",
+		  "Parcel type": "Standard Parcel",
+		  "Name": "stephen shive",
+		  "Phonenumber": "07583 453233",
+		  "Client": "AMAZ",
+		  "Delivery type": "NDAY  ",
+		  "Barcode": "63-896-71-97612689-4"
+		}
+	]
 }

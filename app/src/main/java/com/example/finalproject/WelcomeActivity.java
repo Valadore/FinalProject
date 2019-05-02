@@ -1,5 +1,6 @@
 package com.example.finalproject;
 
+import android.arch.persistence.room.Room;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -17,7 +18,6 @@ public class WelcomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_welcome);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
 
         Button button = (Button) findViewById(R.id.button_continue);
         button.setOnClickListener(new View.OnClickListener() {

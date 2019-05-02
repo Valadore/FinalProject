@@ -15,6 +15,7 @@ public class Parcel {
     @NonNull
     @PrimaryKey
     private String parcelBarcode;
+    private String parcelType;
     private String status;
     private String jobID;
     @Nullable private String signatureFileName;
@@ -24,13 +25,16 @@ public class Parcel {
 
     public Parcel() {}
 
-    public Parcel(@NonNull String parcelBarcode, String status, String jobID) {
+    public Parcel(@NonNull String parcelBarcode, String parcelType, String status, String jobID) {
         this.parcelBarcode = parcelBarcode;
+        this.parcelType = parcelType;
         this.status = status;
         this.jobID = jobID;
     }
 
     //------Getters----------------
+
+    public String getParcelType() { return parcelType; }
 
     public String getJobID() { return jobID; }
 
@@ -63,6 +67,8 @@ public class Parcel {
     }
 
     //-------- Setters -----------
+
+    public void setParcelType(String parcelType) { this.parcelType = parcelType; }
 
     public void setJobID(String jobID) { this.jobID = jobID; }
 

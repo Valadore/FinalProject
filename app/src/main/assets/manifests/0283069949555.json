@@ -1,29 +1,35 @@
 {
-   "57 Ker St Devonport": {
-      "Postcode": "PL1  4EJ",
-      "Parcel type": "Packet",
-      "Name": "Yvonne rich",
-      "Phonenumber": "07904 324244",
-      "Client": "ZO10",
-      "Delivery type": "NDAY  ",
-      "Barcode": "63-069-71-53808297-0"
-   },
-   "65 Charles Darwin Road": {
-      "Postcode": "PL1  4GU",
-      "Parcel type": "Packet",
-      "Name": "jennifer hall",
-      "Phonenumber": "07896 435245",
-      "Client": "ZO10",
-      "Delivery type": "NDAY  ",
-      "Barcode": "63-069-71-53808887-3"
-   },
-   "3 Locks Walk": {
-      "Postcode": "PL1  4RN",
-      "Parcel type": "Packet",
-      "Name": "HANNAH chester",
-      "Phonenumber": "07368 224324",
-      "Client": "MISS",
-      "Delivery type": "NDAY  ",
-      "Barcode": "63-069-71-93430038-8"
-   }
+   "57 Ker St Devonport": [ 
+		{
+		  "Postcode": "PL1  4EJ",
+		  "Parcel type": "Packet",
+		  "Name": "Yvonne rich",
+		  "Phonenumber": "07904 324244",
+		  "Client": "ZO10",
+		  "Delivery type": "NDAY  ",
+		  "Barcode": "63-069-71-53808297-0"
+		}
+   ],
+   "65 Charles Darwin Road": [
+		{
+		  "Postcode": "PL1  4GU",
+		  "Parcel type": "Packet",
+		  "Name": "jennifer hall",
+		  "Phonenumber": "07896 435245",
+		  "Client": "ZO10",
+		  "Delivery type": "NDAY  ",
+		  "Barcode": "63-069-71-53808887-3"
+		}
+   ],
+   "3 Locks Walk": [
+		{
+		  "Postcode": "PL1  4RN",
+		  "Parcel type": "Packet",
+		  "Name": "HANNAH chester",
+		  "Phonenumber": "07368 224324",
+		  "Client": "MISS",
+		  "Delivery type": "NDAY  ",
+		  "Barcode": "63-069-71-93430038-8"
+		}
+   ]
 }
