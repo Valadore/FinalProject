@@ -1,12 +1,10 @@
 package com.example.finalproject;
 
 import android.arch.persistence.room.Room;
-import android.arch.persistence.room.RoomDatabase;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -52,7 +50,7 @@ public class DownloadManifestsActivity extends AppCompatActivity {
                 List<String> manifests = adapter.getManifests();
                 buildManifests(manifests);
 
-                Intent myIntent = new Intent(DownloadManifestsActivity.this, BarcodeScanActivity.class);
+                Intent myIntent = new Intent(DownloadManifestsActivity.this, BarcodeListActivity.class);
                 startActivity(myIntent);
             }
         });

@@ -59,6 +59,9 @@ public interface MyDao {
     @Query("SELECT DISTINCT postcode FROM Job")
     public List<String> getAllPostcodes();
 
+    @Query("SELECT parcelBarcode FROM Parcel")
+    public List<String> getAllBarcodes();
+
     //---------- update ------------------
 
     @Update
