@@ -167,6 +167,7 @@ public class DownloadManifestsActivity extends AppCompatActivity {
                         JSONObject currentParcel = manifestObj2.getJSONObject(y);
 
                         String parcelBarcode = (String) currentParcel.get("Barcode");
+                        //parcelBarcode = parcelBarcode.replaceAll("-","").trim();
                         String parcelType = (String) currentParcel.get("Parcel type");
                         String parcelStatus = "Incomplete";
                         String parcelJobID = jobName;

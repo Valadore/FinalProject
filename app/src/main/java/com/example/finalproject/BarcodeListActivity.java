@@ -30,7 +30,7 @@ public class BarcodeListActivity extends AppCompatActivity {
         setContentView(R.layout.activity_barcode_list);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        Button btn = (Button) findViewById(R.id.btn_sm);
+        Button btn = findViewById(R.id.btn_Scan);
 
         //build database !!!!temp useing main thread need to change!!!!!!!!!!
         AppDatabase db = Room.databaseBuilder(getApplicationContext(),
@@ -42,7 +42,7 @@ public class BarcodeListActivity extends AppCompatActivity {
         final BarcodeListAdapter adapter = new BarcodeListAdapter((ArrayList<String>) barcodeList, this);
 
         //handle listview and assign adapter
-        lView = (ListView)findViewById(R.id.barcode_list);
+        lView = findViewById(R.id.barcode_list);
         lView.setAdapter(adapter);
 
         btn.setOnClickListener(new View.OnClickListener() {
