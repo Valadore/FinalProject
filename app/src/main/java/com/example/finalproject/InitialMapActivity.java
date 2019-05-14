@@ -62,7 +62,6 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
             mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000,
                     10, mLocationListener);
         }
-
     }
 
     @Override
@@ -77,7 +76,6 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
                 Toast.makeText(this, "please accept permission !!!!", Toast.LENGTH_SHORT).show();
                 finish();
             }
-
         }
     }
 

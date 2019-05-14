@@ -1,7 +1,6 @@
 package com.example.finalproject;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,13 +13,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ManifestListAdapter extends BaseAdapter implements ListAdapter {
-    private ArrayList<String> list = new ArrayList<String>();
+    private ArrayList<String> list;
     private Context context;
-    private List<String> manifests = new ArrayList<String>();
+    private List<String> manifests = new ArrayList<>();
 
-
-
-    public ManifestListAdapter(ArrayList<String> list, Context context) {
+    ManifestListAdapter(ArrayList<String> list, Context context) {
         this.list = list;
         this.context = context;
     }
@@ -40,7 +37,7 @@ public class ManifestListAdapter extends BaseAdapter implements ListAdapter {
         return 0;
     }
 
-    public List<String> getManifests()
+    List<String> getManifests()
     {
         return manifests;
     }
@@ -54,11 +51,11 @@ public class ManifestListAdapter extends BaseAdapter implements ListAdapter {
         }
 
         //Handle TextView and display string from your list
-        TextView listItemText = (TextView)view.findViewById(R.id.list_item_string);
+        TextView listItemText = view.findViewById(R.id.list_item_string);
         listItemText.setText(list.get(position));
 
         //Handle buttons and add onClickListeners
-        Button downloadBtn = (Button)view.findViewById(R.id.download_btn);
+        Button downloadBtn = view.findViewById(R.id.download_btn);
 
         downloadBtn.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -69,7 +66,6 @@ public class ManifestListAdapter extends BaseAdapter implements ListAdapter {
                 notifyDataSetChanged();
             }
         });
-
         return view;
     }
 }

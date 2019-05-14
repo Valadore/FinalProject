@@ -21,8 +21,7 @@ import java.util.List;
 public class BarcodeListActivity extends AppCompatActivity {
 
     private static final int REQ_CODE_PERMISSION = 0x1111;
-    private ListView lView;
-    private List<String> barcodeList;
+    private AppDatabase db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,17 +32,8 @@ public class BarcodeListActivity extends AppCompatActivity {
         Button btn = findViewById(R.id.btn_Scan);
 
         //build database !!!!temp useing main thread need to change!!!!!!!!!!
-        AppDatabase db = Room.databaseBuilder(getApplicationContext(),
+        db = Room.databaseBuilder(getApplicationContext(),
                 AppDatabase.class, "sessionDatabase").allowMainThreadQueries().build();
-
-        barcodeList = db.myDao().getAllBarcodes();
-
-        //instantiate custom adapter
-        final BarcodeListAdapter adapter = new BarcodeListAdapter((ArrayList<String>) barcodeList, this);
-
-        //handle listview and assign adapter
-        lView = findViewById(R.id.barcode_list);
-        lView.setAdapter(adapter);
 
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -56,14 +46,22 @@ public class BarcodeListActivity extends AppCompatActivity {
                     // Have gotten the permission
                     Intent myIntent = new Intent(BarcodeListActivity.this, BarcodeScanActivity.class);
                     startActivity(myIntent);
-
                 }
             }
         });
 
-        Button button = (Button) findViewById(R.id.button_continue);
+        //this is for dev purposes, skips the scanning prosses and sets all parcels to scanned
+        Button button = findViewById(R.id.button_continue);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+
+                Parcel[] parcelList = db.myDao().getAllParcels();
+
+                //update all parcels
+                for (Parcel tempParcel : parcelList) {
+                    tempParcel.setStatus("Scanned");
+                    db.myDao().updateParcel(tempParcel);
+                }
                 Intent myIntent = new Intent(BarcodeListActivity.this, InitialMapActivity.class);
                 startActivity(myIntent);
             }
@@ -73,19 +71,36 @@ public class BarcodeListActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        switch (requestCode) {
-            case REQ_CODE_PERMISSION: {
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // User agree the permission
-                    Intent myIntent = new Intent(BarcodeListActivity.this, BarcodeScanActivity.class);
-                    startActivity(myIntent);
+        if (requestCode == REQ_CODE_PERMISSION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // User agree the permission
+                Intent myIntent = new Intent(BarcodeListActivity.this, BarcodeScanActivity.class);
+                startActivity(myIntent);
 
-                } else {
-                    // User disagree the permission
-                    Toast.makeText(this, "You must agree the camera permission request before you use the code scan function", Toast.LENGTH_LONG).show();
-                }
+            } else {
+                // User disagree the permission
+                Toast.makeText(this, "You must agree the camera permission request before you use the code scan function", Toast.LENGTH_LONG).show();
             }
-            break;
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        List<String> barcodeList = db.myDao().getAllBarcodes();
+
+        //instantiate custom adapter
+        BarcodeListAdapter adapter = new BarcodeListAdapter((ArrayList<String>) barcodeList, this);
+
+        //handle listview and assign adapter
+        ListView lView = findViewById(R.id.barcode_list);
+        lView.setAdapter(adapter);
+        adapter.notifyDataSetChanged();
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        onResume();
     }
 }

@@ -9,16 +9,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
-
-import android.app.Activity;
 import android.graphics.Color;
-import android.os.Bundle;
-import android.view.KeyEvent;
-import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-
 import com.example.finalproject.AppDatabase;
 import com.example.finalproject.Parcel;
 import com.google.zxing.BarcodeFormat;
@@ -28,11 +21,11 @@ import com.journeyapps.barcodescanner.BarcodeCallback;
 import com.journeyapps.barcodescanner.BarcodeResult;
 import com.journeyapps.barcodescanner.DecoratedBarcodeView;
 import com.journeyapps.barcodescanner.DefaultDecoderFactory;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 import com.example.finalproject.R;
 
@@ -42,9 +35,7 @@ public class BarcodeScanFragment extends Fragment {
     private BeepManager beepManager;
     private List<String> barcodeList;
     private List<String> scannedBarcodes;
-    private Parcel[] parcelList;
     private AppDatabase db;
-
 
     public static BarcodeScanFragment newInstance() {
         return new BarcodeScanFragment();
@@ -62,10 +53,10 @@ public class BarcodeScanFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
 
         //build database !!!!temp useing main thread need to change!!!!!!!!!!
-         db = Room.databaseBuilder(getActivity(),
+         db = Room.databaseBuilder(Objects.requireNonNull(getActivity()),
                 AppDatabase.class, "sessionDatabase").allowMainThreadQueries().build();
 
-        barcodeView = getView().findViewById(R.id.barcode_scanner);
+        barcodeView = Objects.requireNonNull(getView()).findViewById(R.id.barcode_scanner);
         Collection<BarcodeFormat> formats = Arrays.asList(BarcodeFormat.QR_CODE, BarcodeFormat.CODE_39);
         barcodeView.getBarcodeView().setDecoderFactory(new DefaultDecoderFactory(formats));
         barcodeView.initializeFromIntent(getActivity().getIntent());
@@ -79,8 +70,13 @@ public class BarcodeScanFragment extends Fragment {
         public void barcodeResult(BarcodeResult result) {
             String barcode = result.getText();
             //check for data, if the barcode has been scanned, and if the barcxode existsin our db
-            if(barcode == null || scannedBarcodes.contains(barcode) || !barcodeList.contains(barcode)) {
+            if(barcode == null || !barcodeList.contains(barcode)) {
                 barcodeView.setStatusText("Not in list: " + barcode);
+                // Prevent duplicate scans
+                return;
+            }
+            if( scannedBarcodes.contains(barcode)) {
+                barcodeView.setStatusText("Already Scanned: " + barcode);
                 // Prevent duplicate scans
                 return;
             }
@@ -95,7 +91,7 @@ public class BarcodeScanFragment extends Fragment {
             db.myDao().updateParcel(parcel);
 
             //update info on screen
-            TextView tvScanned = getView().findViewById(R.id.tv_scanned);
+            TextView tvScanned = Objects.requireNonNull(getView()).findViewById(R.id.tv_scanned);
             tvScanned.setText("Scanned: " + scannedBarcodes.size() + "/" + barcodeList.size());
             TextView tvName = getView().findViewById(R.id.tv_Name);
             tvName.setText(db.myDao().getNameByBarcode(barcode));
@@ -112,6 +108,7 @@ public class BarcodeScanFragment extends Fragment {
         }
     };
 
+    //when we resume we want to update the scanned barcodes so we dont duplicate scan
     @Override
     public void onResume() {
         super.onResume();
@@ -121,22 +118,20 @@ public class BarcodeScanFragment extends Fragment {
         barcodeList = db.myDao().getAllBarcodes();
         scannedBarcodes = new ArrayList<>();
 
-        parcelList = db.myDao().getAllParcels();
+        Parcel[] parcelList = db.myDao().getAllParcels();
 
-        for (int i = 0; i < parcelList.length; i++)
-        {
-            Log.d("parcel status", "Status: " + parcelList[i].getStatus());
-            if (parcelList[i].getStatus() == "Scanned")
-            {
-                scannedBarcodes.add(parcelList[i].getParcelBarcode());
-                Log.d("Scanned Barcode:", parcelList[i].getParcelBarcode());
+        for (Parcel parcel : parcelList) {
+            Log.d("parcel status", "Status: " + parcel.getStatus());
+            if (parcel.getStatus().equals("Scanned")) {
+                Log.d("parcel status", "Status: " + parcel.getStatus());
+                scannedBarcodes.add(parcel.getParcelBarcode());
+                Log.d("Scanned Barcode:", parcel.getParcelBarcode());
             }
         }
 
         Log.d("Parcel List",String.valueOf( parcelList.length));
 
-
-        TextView tvScanned = getView().findViewById(R.id.tv_scanned);
+        TextView tvScanned = Objects.requireNonNull(getView()).findViewById(R.id.tv_scanned);
         tvScanned.setText("Scanned: " + scannedBarcodes.size() + "/" + barcodeList.size());
 
         barcodeView.resume();
@@ -148,17 +143,4 @@ public class BarcodeScanFragment extends Fragment {
 
         barcodeView.pause();
     }
-
-    public void pause(View view) {
-        barcodeView.pause();
-    }
-
-    public void resume(View view) {
-        barcodeView.resume();
-    }
-
-    public void triggerScan(View view) {
-        barcodeView.decodeSingle(callback);
-    }
-
 }

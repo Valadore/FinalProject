@@ -16,10 +16,12 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 public class DownloadManifestsActivity extends AppCompatActivity {
 
@@ -30,19 +32,19 @@ public class DownloadManifestsActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
 
         String[] manifests = getManifestList();
-        List<String> stringList = new ArrayList<String>(Arrays.asList(manifests));
+        ArrayList<String> stringList = new ArrayList<>(Arrays.asList(manifests));
 
         //instantiate custom adapter
-        final ManifestListAdapter adapter = new ManifestListAdapter((ArrayList<String>) stringList, this);
+        final ManifestListAdapter adapter = new ManifestListAdapter(stringList, this);
 
         //handle listview and assign adapter
-        ListView lView = (ListView)findViewById(R.id.manifest_list);
+        ListView lView = findViewById(R.id.manifest_list);
         lView.setAdapter(adapter);
 
-        Button button = (Button) findViewById(R.id.button_continue);
+        Button button = findViewById(R.id.button_continue);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
 
@@ -130,20 +132,18 @@ public class DownloadManifestsActivity extends AppCompatActivity {
                     JSONArray manifestObj2 = manifestObj.getJSONArray(jobName);
                     JSONObject currentJob = manifestObj2.getJSONObject(0);
 
-                    String jobID = jobName;
                     String jobType = (String) currentJob.get("Parcel type");
                     String name = (String) currentJob.get("Name");
                     String postcode = (String) currentJob.get("Postcode");
-                    String address = jobName;
                     String phoneNumber = (String) currentJob.get("Phonenumber");
                     String status = "Incomplete";
                     String client = (String) currentJob.get("Client");
 
-                    newJob.setJobID(jobID);
+                    newJob.setJobID(jobName);
                     newJob.setJobType(jobType);
                     newJob.setName(name);
                     newJob.setPostcode(postcode);
-                    newJob.setAddress(address);
+                    newJob.setAddress(jobName);
                     newJob.setPhoneNumber(phoneNumber);
                     newJob.setStatus(status);
                     newJob.setClient(client);
@@ -170,12 +170,11 @@ public class DownloadManifestsActivity extends AppCompatActivity {
                         //parcelBarcode = parcelBarcode.replaceAll("-","").trim();
                         String parcelType = (String) currentParcel.get("Parcel type");
                         String parcelStatus = "Incomplete";
-                        String parcelJobID = jobName;
 
                         newParcel.setParcelBarcode(parcelBarcode);
                         newParcel.setParcelType(parcelType);
                         newParcel.setStatus(parcelStatus);
-                        newParcel.setJobID(parcelJobID);
+                        newParcel.setJobID(jobName);
 
                         numparcels++;
                         Log.d("Number of parcels", String.valueOf(numparcels));
@@ -197,14 +196,14 @@ public class DownloadManifestsActivity extends AppCompatActivity {
     //For the debug app only, we read the json from a file
     //If this was a live version this is where we would download
     public String readJSONFromAsset(String manifest) {
-        String json = null;
+        String json;
         try {
             InputStream is = getAssets().open("manifests/" + manifest);
             int size = is.available();
             byte[] buffer = new byte[size];
             is.read(buffer);
             is.close();
-            json = new String(buffer, "UTF-8");
+            json = new String(buffer, StandardCharsets.UTF_8);
         } catch (IOException ex) {
             ex.printStackTrace();
             return null;

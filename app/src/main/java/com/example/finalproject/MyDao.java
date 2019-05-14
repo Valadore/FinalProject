@@ -68,6 +68,12 @@ public interface MyDao {
     @Query("SELECT address FROM Job INNER JOIN Parcel ON Parcel.jobID = Job.jobID WHERE Parcel.parcelBarcode = :barcode")
     public String getAddressByBarcode(String barcode);
 
+    @Query("SELECT postcode FROM Job INNER JOIN Parcel ON Parcel.jobID = Job.jobID WHERE Parcel.parcelBarcode = :barcode")
+    public String getPostcodeByBarcode(String barcode);
+
+    @Query("SELECT status FROM Parcel WHERE parcelBarcode = :barcode")
+    public String getStatusByBarcode(String barcode);
+
     //---------- update ------------------
 
     @Update
