@@ -23,16 +23,20 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.google.android.gms.ads.internal.request.LargeParcelTeleporter;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class InitialMapActivity extends FragmentActivity implements OnMapReadyCallback {
@@ -132,67 +136,110 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
         }
     }
 
-    private String latlongList;
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        mMap.addMarker(new MarkerOptions().position(myLocation).title("New Marker"));
+        mMap.addMarker(new MarkerOptions().position(myLocation).title("My Location"));
 
-        showLocations();
+        //get locations on seperate thread
+        new AsyncShowLocations().execute();
     }
 
 
-    private void showLocations()
+    class AsyncShowLocations extends AsyncTask<Void, Void, Void>
     {
+        List<String> addresses;
+        List<LatLng> latLngs;
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            addresses = getAddresses();
+            latLngs = getLocationFromAddress(addresses);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            showLocations(addresses, latLngs);
+        }
+    }
+
+    private void showLocations(List<String> addresses, List<LatLng> latLngs)
+    {
+        List<MarkerOptions> markers = new ArrayList<>();
+        for(int i = 0; i < latLngs.size(); i++)
+        {
+            String address = addresses.get(i);
+            LatLng latLng = latLngs.get(i);
+
+            MarkerOptions marker = new MarkerOptions().position(latLng).title(address);
+            markers.add(marker);
+            //Put marker on map on that LatLng
+            mMap.addMarker(marker);
+        }
+
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+        for (MarkerOptions marker : markers) {
+            builder.include(marker.getPosition());
+        }
+
+        //Animate and Zoom on that map location
+        LatLngBounds bounds = builder.build();
+        int padding = 100; // offset from edges of the map in pixels
+        CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
+        mMap.animateCamera(cu);
+    }
+
+    private List<String> getAddresses(){
+
+        List<String> Addresses = new ArrayList<>();
+
         db = Room.databaseBuilder(this,
                 AppDatabase.class, "sessionDatabase").allowMainThreadQueries().build();
 
         Job jobs[] = db.myDao().getAllJobs();
-        int i = 0;
         for (Job job : jobs) {
-            i++;
-            String combinedAddress = job.getAddress() + " " + job.getPostcode();
-            getLocationFromAddress(combinedAddress);
-            Log.d("Address" + i, combinedAddress);
+            Addresses.add(job.getAddress() + " " + job.getPostcode());
         }
-        latlongList = latlongList.replace(" lat/lng: ",":");
-        latlongList = latlongList.replace("(","");
-        latlongList = latlongList.replace(")","");
-        latlongList = latlongList.replace("null","");
-        Log.d("List of latlongs", latlongList);
+        return Addresses;
     }
 
-    public void getLocationFromAddress(String strAddress)
+    private List<LatLng> getLocationFromAddress(List<String> addresses)
     {
-        //Create coder with Activity context - this
-        Geocoder coder = new Geocoder(this);
-        List<Address> address;
+        List<LatLng> latLngs = new ArrayList<>();
+        for (String address : addresses)
+        {
+            LatLng latLng;
+            latLng = getLatLngFromAddress(address);
+            latLngs.add(latLng);
+        }
+        return latLngs;
+    }
 
+    private LatLng getLatLngFromAddress(String address)
+    {
+        Geocoder coder = new Geocoder(this);
+        List<Address> possibleaddresses;
+        LatLng latLng = null;
         try {
             //Get latLng from String
-            address = coder.getFromLocationName(strAddress,5);
+            possibleaddresses = coder.getFromLocationName(address,5);
 
             //check for null
-            if (address == null) {
-                return;
+            if (possibleaddresses == null) {
+                return null;
             }
 
             //Lets take first possibility from the all possibilities.
-            Address location=address.get(0);
-            LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-            latlongList = latlongList + " " + latLng;
-
-
-            //Put marker on map on that LatLng
-            mMap.addMarker(new MarkerOptions().position(latLng).title(strAddress));
-            mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-
-            //Animate and Zoon on that map location
-            mMap.animateCamera(CameraUpdateFactory.zoomTo(15));
+            Address location = possibleaddresses.get(0);
+            latLng = new LatLng(location.getLatitude(), location.getLongitude());
 
         } catch (IOException e)
         {
             e.printStackTrace();
         }
+        return latLng;
     }
+
 }
