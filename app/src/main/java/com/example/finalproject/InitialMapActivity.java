@@ -3,10 +3,15 @@ package com.example.finalproject;
 import android.Manifest;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.arch.persistence.room.Room;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
@@ -20,7 +25,12 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Pair;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.ads.internal.request.LargeParcelTeleporter;
@@ -30,6 +40,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
@@ -45,9 +56,15 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
     private GPSTracker gpsTracker;
     private GoogleMap mMap;
     private AppDatabase db;
+    private Button btnOptimise;
+    private LatLng startLocation;
 
-    private View mProgressView;
-    private View mMapView;
+    private List<String> addresses = new ArrayList<>();
+    private List<LatLng> latLngs = new ArrayList<>();
+    List<MarkerOptions> markers = new ArrayList<>();
+
+    //create a paired list first is adresss second is latlongs
+    private Pair<List<String>, List<LatLng> > pair = Pair.create(addresses, latLngs);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,8 +103,18 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
                     10, mLocationListener);
         }
 
-        mMapView = findViewById(R.id.map);
-        mProgressView = findViewById(R.id.login_progress);
+        btnOptimise = findViewById(R.id.btn_Optimise);
+        btnOptimise.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Log.d("TESTING!!", "onPostExecute: " + pair.first.toString());
+                Log.d("TESTING!!", "onPostExecute: " + pair.second.toString());
+
+                //TO DO:
+                //now we need to get optimal order and route using the tom tom api
+                //we have a list of addressses and corisponding latlngs
+            }
+        });
+
     }
 
     @Override
@@ -111,6 +138,7 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
         return (res == PackageManager.PERMISSION_GRANTED);
     }
 
+    @SuppressLint("MissingPermission")
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
@@ -120,9 +148,9 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
                     //Permission Granted
-
                     gpsTracker = new GPSTracker(this);
                     if (gpsTracker.canGetLocation) {
+                        mMap.setMyLocationEnabled(true);
                         myLocation = new LatLng(gpsTracker.getLatitude(), gpsTracker.getLongitude());
                     } else {
                         // permission denied, boo! Disable the
@@ -139,35 +167,103 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        mMap.addMarker(new MarkerOptions().position(myLocation).title("My Location"));
-
         //get locations on seperate thread
-        new AsyncShowLocations().execute();
+        new AsyncShowLocations().execute(pair);
+
+        //get prompt for start location and add to map
+        getStartLocation();
     }
 
+    private void getStartLocation()
+    {
+        // get prompts.xml view
+        LayoutInflater li = LayoutInflater.from(InitialMapActivity.this);
+        View promptsView = li.inflate(R.layout.prompt_getstart, null);
 
-    class AsyncShowLocations extends AsyncTask<Void, Void, Void>
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
+                InitialMapActivity.this);
+
+        // set prompts.xml to alertdialog builder
+        alertDialogBuilder.setView(promptsView);
+
+        final EditText userInput = (EditText) promptsView
+                .findViewById(R.id.editTextDialogUserInput);
+
+        // set dialog message
+        alertDialogBuilder
+                .setCancelable(false)
+                .setPositiveButton("Yes",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog,int id) {
+                                // get user input and set it to result
+                                // edit text
+                                LatLng newlatlng = getLatLngFromAddress(userInput.getText().toString());
+                                if (newlatlng != null) {
+                                    startLocation = newlatlng;
+                                    MarkerOptions marker = new MarkerOptions()
+                                            .position(startLocation)
+                                            .title("Start")
+                                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
+                                    markers.add(marker);
+                                    mMap.addMarker(marker);
+                                    zoomMap();
+                                } else
+                                {
+                                    TextView alertTxtView = findViewById(R.id.alertTxtView);
+                                    alertTxtView.setText("Could not find address");
+                                }
+                            }
+                        })
+                .setNegativeButton("Use My Location",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog,int id) {
+                                dialog.cancel();
+                                startLocation = myLocation;
+                                MarkerOptions marker = new MarkerOptions()
+                                        .position(startLocation)
+                                        .title("Start")
+                                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
+
+                                markers.add(marker);
+                                mMap.addMarker(marker);
+                                zoomMap();
+                            }
+                        });
+
+        // create alert dialog
+        AlertDialog alertDialog = alertDialogBuilder.create();
+
+        // show it
+        alertDialog.show();
+    }
+
+    private class AsyncShowLocations extends AsyncTask<Pair<List<String>, List<LatLng> >, Void, Pair<List<String>, List<LatLng> >>
     {
         List<String> addresses;
         List<LatLng> latLngs;
 
         @Override
-        protected Void doInBackground(Void... voids) {
+        protected Pair doInBackground(Pair<List<String>, List<LatLng> >... pair) {
+
             addresses = getAddresses();
             latLngs = getLocationFromAddress(addresses);
-            return null;
+
+            Pair<List<String>, List<LatLng> > result = Pair.create(addresses, latLngs);
+            return result;
         }
 
         @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
+        protected void onPostExecute(Pair<List<String>, List<LatLng> > result) {
+            super.onPostExecute(result);
             showLocations(addresses, latLngs);
+            pair.first.addAll(result.first);
+            pair.second.addAll(result.second);
+            btnOptimise.setVisibility(View.VISIBLE);
         }
     }
 
     private void showLocations(List<String> addresses, List<LatLng> latLngs)
     {
-        List<MarkerOptions> markers = new ArrayList<>();
         for(int i = 0; i < latLngs.size(); i++)
         {
             String address = addresses.get(i);
@@ -179,6 +275,11 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
             mMap.addMarker(marker);
         }
 
+        zoomMap();
+    }
+
+    private void zoomMap()
+    {
         LatLngBounds.Builder builder = new LatLngBounds.Builder();
         for (MarkerOptions marker : markers) {
             builder.include(marker.getPosition());
