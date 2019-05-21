@@ -1,17 +1,11 @@
 package com.example.finalproject;
 
 import android.Manifest;
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.arch.persistence.room.Room;
-import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
@@ -19,7 +13,6 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
@@ -33,22 +26,30 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.ads.internal.request.LargeParcelTeleporter;
+import com.google.android.gms.common.util.JsonUtils;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
-import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class InitialMapActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -58,10 +59,16 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
     private AppDatabase db;
     private Button btnOptimise;
     private LatLng startLocation;
+    private LatLng endLocation;
 
     private List<String> addresses = new ArrayList<>();
     private List<LatLng> latLngs = new ArrayList<>();
+    private List<String> optimisedAddresses = new ArrayList<>();
+    private List<LatLng> optimisedLatLngs = new ArrayList<>();
     List<MarkerOptions> markers = new ArrayList<>();
+
+    String txtJson;
+    ProgressDialog pd;
 
     //create a paired list first is adresss second is latlongs
     private Pair<List<String>, List<LatLng> > pair = Pair.create(addresses, latLngs);
@@ -106,15 +113,129 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
         btnOptimise = findViewById(R.id.btn_Optimise);
         btnOptimise.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Log.d("TESTING!!", "onPostExecute: " + pair.first.toString());
-                Log.d("TESTING!!", "onPostExecute: " + pair.second.toString());
 
+
+                addresses = pair.first;
+                latLngs = pair.second;
+
+                addresses.add(0, "Start");
+                addresses.add("end");
+                latLngs.add(0, startLocation);
+                latLngs.add(endLocation);
+
+                String latlngString = latLngs.toString();
+                latlngString = latlngString.replaceAll("\\), lat/lng: \\(", ":");
+                latlngString = latlngString.replaceAll("\\[lat/lng: \\(", "");
+                latlngString = latlngString.replaceAll("\\)]", "");
+
+
+                Log.d("TESTING!!", "onPostExecute: " + addresses);
+                Log.d("TESTING!!", "onPostExecute: " + latlngString);
                 //TO DO:
                 //now we need to get optimal order and route using the tom tom api
                 //we have a list of addressses and corisponding latlngs
+
+                //for live use this should be obfuscated
+                String key = "5jamNFMokhWdAqpWIxGjNh388PHjJP69";
+
+                String url = "https://api.tomtom.com/routing/1/calculateRoute/" + latlngString +
+                        "/json?computeBestOrder=true&routeRepresentation=none&" +
+                        "computeTravelTimeFor=none&routeType=fastest&traffic=false&" +
+                        "avoid=unpavedRoads&travelMode=car&key=" + key;
+
+                new JsonTask().execute(url);
             }
         });
+    }
 
+    private void getOptimisedroute() {
+        JSONObject obj = null;
+        try {
+            obj = new JSONObject(txtJson);
+            JSONArray optimizedWaypoints = obj.getJSONArray("optimizedWaypoints");
+            Log.d("TESTING!!", "optimizedWaypoints: " + optimizedWaypoints);
+
+            for(int i=0;i<optimizedWaypoints.length(); i++)
+            {
+                String temp = optimizedWaypoints.getString(i);
+                JSONObject obj2 = new JSONObject(temp);
+                int optimised = Integer.parseInt(obj2.getString("optimizedIndex")) + 1;
+                optimisedAddresses.add(addresses.get(optimised));
+                optimisedLatLngs.add(latLngs.get(optimised));
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        Log.d("TESTING!!", "optimized order: " + optimisedAddresses);
+    }
+
+    private class JsonTask extends AsyncTask<String, String, String> {
+
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+            pd = new ProgressDialog(InitialMapActivity.this);
+            pd.setMessage("Please wait");
+            pd.setCancelable(false);
+            pd.show();
+        }
+
+        protected String doInBackground(String... params) {
+
+
+            HttpURLConnection connection = null;
+            BufferedReader reader = null;
+
+            try {
+                URL url = new URL(params[0]);
+                connection = (HttpURLConnection) url.openConnection();
+                connection.connect();
+
+
+                InputStream stream = connection.getInputStream();
+
+                reader = new BufferedReader(new InputStreamReader(stream));
+
+                StringBuffer buffer = new StringBuffer();
+                String line = "";
+
+                while ((line = reader.readLine()) != null) {
+                    buffer.append(line+"\n");
+                    Log.d("Response: ", "> " + line);   //here u ll get whole response...... :-)
+
+                }
+
+                return buffer.toString();
+
+
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (connection != null) {
+                    connection.disconnect();
+                }
+                try {
+                    if (reader != null) {
+                        reader.close();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+            if (pd.isShowing()){
+                pd.dismiss();
+            }
+            txtJson = result;
+            getOptimisedroute();
+        }
     }
 
     @Override
@@ -174,6 +295,72 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
         getStartLocation();
     }
 
+
+    private void getEndLocation()
+    {
+        // get prompts.xml view
+        LayoutInflater li = LayoutInflater.from(InitialMapActivity.this);
+        View promptsView = li.inflate(R.layout.prompt_getstart, null);
+
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
+                InitialMapActivity.this);
+
+        // set prompts.xml to alertdialog builder
+        alertDialogBuilder.setView(promptsView);
+
+        final EditText userInput = promptsView
+                .findViewById(R.id.editTextDialogUserInput);
+
+        TextView alertTxt = promptsView.findViewById(R.id.alertTxtView);
+        alertTxt.setText("Use custom end location?");
+
+        // set dialog message
+        alertDialogBuilder
+                .setCancelable(false)
+                .setPositiveButton("Yes",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog,int id) {
+                                // get user input and set it to result
+                                // edit text
+                                LatLng newlatlng = getLatLngFromAddress(userInput.getText().toString());
+                                if (newlatlng != null) {
+                                    endLocation = newlatlng;
+                                    MarkerOptions marker = new MarkerOptions()
+                                            .position(endLocation)
+                                            .title("End")
+                                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
+                                    markers.add(marker);
+                                    mMap.addMarker(marker);
+                                    zoomMap();
+                                } else
+                                {
+                                    TextView alertTxtView = findViewById(R.id.alertTxtView);
+                                    alertTxtView.setText("Could not find address");
+                                }
+                            }
+                        })
+                .setNegativeButton("Use My Location",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog,int id) {
+                                dialog.cancel();
+                                endLocation = myLocation;
+                                MarkerOptions marker = new MarkerOptions()
+                                        .position(endLocation)
+                                        .title("End")
+                                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
+
+                                markers.add(marker);
+                                mMap.addMarker(marker);
+                                zoomMap();
+                            }
+                        });
+
+        // create alert dialog
+        AlertDialog alertDialog = alertDialogBuilder.create();
+        // show it
+        alertDialog.show();
+    }
+
     private void getStartLocation()
     {
         // get prompts.xml view
@@ -186,8 +373,11 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
         // set prompts.xml to alertdialog builder
         alertDialogBuilder.setView(promptsView);
 
-        final EditText userInput = (EditText) promptsView
+        final EditText userInput = promptsView
                 .findViewById(R.id.editTextDialogUserInput);
+
+        TextView alertTxt = promptsView.findViewById(R.id.alertTxtView);
+        alertTxt.setText("Use custom start location?");
 
         // set dialog message
         alertDialogBuilder
@@ -207,6 +397,7 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
                                     markers.add(marker);
                                     mMap.addMarker(marker);
                                     zoomMap();
+                                    getEndLocation();
                                 } else
                                 {
                                     TextView alertTxtView = findViewById(R.id.alertTxtView);
@@ -227,12 +418,12 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
                                 markers.add(marker);
                                 mMap.addMarker(marker);
                                 zoomMap();
+                                getEndLocation();
                             }
                         });
 
         // create alert dialog
         AlertDialog alertDialog = alertDialogBuilder.create();
-
         // show it
         alertDialog.show();
     }
@@ -242,14 +433,22 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
         List<String> addresses;
         List<LatLng> latLngs;
 
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+            pd = new ProgressDialog(InitialMapActivity.this);
+            pd.setMessage("Please wait");
+            pd.setCancelable(false);
+            pd.show();
+        }
+
         @Override
         protected Pair doInBackground(Pair<List<String>, List<LatLng> >... pair) {
 
             addresses = getAddresses();
             latLngs = getLocationFromAddress(addresses);
 
-            Pair<List<String>, List<LatLng> > result = Pair.create(addresses, latLngs);
-            return result;
+            return Pair.create(addresses, latLngs);
         }
 
         @Override
@@ -259,6 +458,10 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
             pair.first.addAll(result.first);
             pair.second.addAll(result.second);
             btnOptimise.setVisibility(View.VISIBLE);
+
+            if (pd.isShowing()){
+                pd.dismiss();
+            }
         }
     }
 
@@ -299,7 +502,7 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
         db = Room.databaseBuilder(this,
                 AppDatabase.class, "sessionDatabase").allowMainThreadQueries().build();
 
-        Job jobs[] = db.myDao().getAllJobs();
+        Job[] jobs = db.myDao().getAllJobs();
         for (Job job : jobs) {
             Addresses.add(job.getAddress() + " " + job.getPostcode());
         }
@@ -342,5 +545,4 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
         }
         return latLng;
     }
-
 }
