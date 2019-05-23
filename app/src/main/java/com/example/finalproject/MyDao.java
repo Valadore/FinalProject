@@ -74,6 +74,12 @@ public interface MyDao {
     @Query("SELECT status FROM Parcel WHERE parcelBarcode = :barcode")
     public String getStatusByBarcode(String barcode);
 
+    @Query("UPDATE Job SET latlng = :latlng WHERE jobID = :id")
+    public void updateJobLatlng(String latlng, String id);
+
+    @Query("UPDATE Job SET `order` = :order WHERE jobID = :id")
+    public void updateJobOrder(int order, String id);
+
     //---------- update ------------------
 
     @Update

@@ -3,6 +3,9 @@ import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.ForeignKey;
 import android.arch.persistence.room.PrimaryKey;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
+import com.google.android.gms.maps.model.LatLng;
 
 @Entity(foreignKeys = @ForeignKey(entity = Round.class,
                                     parentColumns = "roundID",
@@ -19,6 +22,8 @@ public class Job {
     private String status;
     private String client;
     private String roundID;
+    @Nullable private String latlng;
+    @Nullable private int order;
 
     public Job() {}
 
@@ -70,6 +75,14 @@ public class Job {
         return client;
     }
 
+    @Nullable
+    public String getLatlng() {
+        return latlng;
+    }
+
+    public int getOrder() {
+        return order;
+    }
     //------------- Setters ---------------
 
     public void setRoundID(String roundID) { this.roundID = roundID; }
@@ -104,6 +117,14 @@ public class Job {
 
     public void setClient(String client) {
         this.client = client;
+    }
+
+    public void setLatlng(@Nullable String latlng) {
+        this.latlng = latlng;
+    }
+
+    public void setOrder(int order) {
+        this.order = order;
     }
 }
 

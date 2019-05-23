@@ -3,20 +3,26 @@ package com.example.finalproject;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.app.FragmentManager;
 import android.app.ProgressDialog;
 import android.arch.persistence.room.Room;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
+import android.provider.Telephony;
+import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.support.v4.app.FragmentTransaction;
+import android.text.Layout;
 import android.util.Log;
 import android.util.Pair;
 import android.view.LayoutInflater;
@@ -26,7 +32,6 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.common.util.JsonUtils;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -36,6 +41,9 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.plus.model.people.Person;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -65,10 +73,24 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
     private List<LatLng> latLngs = new ArrayList<>();
     private List<String> optimisedAddresses = new ArrayList<>();
     private List<LatLng> optimisedLatLngs = new ArrayList<>();
-    List<MarkerOptions> markers = new ArrayList<>();
+    private List<MarkerOptions> markers = new ArrayList<>();
+    private List<String> jobID = new ArrayList<>();
+    private List<String> optimisedJobID = new ArrayList<>();
 
     String txtJson;
     ProgressDialog pd;
+
+    @Override
+    public void onBackPressed(){
+        android.support.v4.app.FragmentManager fm = getSupportFragmentManager();
+        if (fm.getBackStackEntryCount() > 0) {
+            Log.i("MainActivity", "popping backstack");
+            fm.popBackStackImmediate();
+        } else {
+            Log.i("MainActivity", "nothing on backstack, calling super");
+            super.onBackPressed();
+        }
+    }
 
     //create a paired list first is adresss second is latlongs
     private Pair<List<String>, List<LatLng> > pair = Pair.create(addresses, latLngs);
@@ -84,7 +106,7 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
             @Override
             public void onLocationChanged(Location location) {
                 myLocation = new LatLng(location.getLatitude(), location.getLongitude());
-                SupportMapFragment supportMapFragment= (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+                SupportMapFragment supportMapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
                 supportMapFragment.getMapAsync(InitialMapActivity.this);
             }
 
@@ -139,7 +161,7 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
                 String key = "5jamNFMokhWdAqpWIxGjNh388PHjJP69";
 
                 String url = "https://api.tomtom.com/routing/1/calculateRoute/" + latlngString +
-                        "/json?computeBestOrder=true&routeRepresentation=none&" +
+                        "/json?computeBestOrder=true&routeRepresentation=polyline&" +
                         "computeTravelTimeFor=none&routeType=fastest&traffic=false&" +
                         "avoid=unpavedRoads&travelMode=car&key=" + key;
 
@@ -148,7 +170,8 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
         });
     }
 
-    private void getOptimisedroute() {
+    private void getOptimisedRoute()
+    {
         JSONObject obj = null;
         try {
             obj = new JSONObject(txtJson);
@@ -162,11 +185,70 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
                 int optimised = Integer.parseInt(obj2.getString("optimizedIndex")) + 1;
                 optimisedAddresses.add(addresses.get(optimised));
                 optimisedLatLngs.add(latLngs.get(optimised));
+                optimisedJobID.add(jobID.get(optimised - 1));
+                db.myDao().updateJobLatlng(latLngs.get(optimised - 1).toString(), jobID.get(optimised - 1));
+                db.myDao().updateJobOrder(optimised  - 1, jobID.get(optimised  - 1));
             }
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        Log.d("TESTING!!", "optimized order: " + optimisedAddresses);
+        Log.d("TESTING!!", "optimizedWaypoints: " + optimisedAddresses);
+    }
+
+    private void drawPollyLines()
+    {
+        for (ArrayList<String> line : pollyLines) {
+            PolylineOptions rectOptions = new PolylineOptions();
+            for (String subline : line)
+            {
+                String[] latlong =  subline.split(",");
+                double latitude = Double.parseDouble(latlong[0]);
+                double longitude = Double.parseDouble(latlong[1]);
+                rectOptions.add(new LatLng(latitude,longitude));
+            }
+
+            rectOptions.color(Color.argb(100,0,0,255));
+            rectOptions.width(25);
+            Polyline polyline = mMap.addPolyline(rectOptions);
+        }
+    }
+
+    private ArrayList<ArrayList<String>> pollyLines = new ArrayList<>();
+    private void getPollyLines() {
+        JSONObject obj = null;
+        try {
+            obj = new JSONObject(txtJson);
+            JSONArray routes = obj.optJSONArray("routes");
+            Log.d("TESTING!!", "routes: " + routes);
+            Log.d("TESTING!!", "size of routes: " + routes.length());
+
+            for(int i=0;i<routes.length(); i++)
+                {
+                  String tempLegs = routes.getString(i);
+                  JSONObject obj2 = new JSONObject(tempLegs);
+                  JSONArray legs = obj2.getJSONArray("legs");
+                    for (int y=0;y<legs.length();y++)
+                    {
+                        String tempPoints = legs.getString(y);
+                        JSONObject obj3 = new JSONObject(tempPoints);
+                        JSONArray points = obj3.getJSONArray("points");
+                        ArrayList<String> legArray = new ArrayList<>();
+                        for (int u = 0;u<points.length();u++)
+                        {
+                            String temp = points.getString(u);
+
+                            temp = temp.replaceAll("\\{\"latitude\":", "");
+                            temp = temp.replaceAll("\"longitude\":", "");
+                            temp = temp.replaceAll("\\}", "");
+
+                            legArray.add(temp);
+                        }
+                        pollyLines.add(legArray);
+                    }
+                }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     private class JsonTask extends AsyncTask<String, String, String> {
@@ -182,7 +264,6 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
 
         protected String doInBackground(String... params) {
 
-
             HttpURLConnection connection = null;
             BufferedReader reader = null;
 
@@ -190,7 +271,6 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
                 URL url = new URL(params[0]);
                 connection = (HttpURLConnection) url.openConnection();
                 connection.connect();
-
 
                 InputStream stream = connection.getInputStream();
 
@@ -202,11 +282,8 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
                 while ((line = reader.readLine()) != null) {
                     buffer.append(line+"\n");
                     Log.d("Response: ", "> " + line);   //here u ll get whole response...... :-)
-
                 }
-
                 return buffer.toString();
-
 
             } catch (MalformedURLException e) {
                 e.printStackTrace();
@@ -234,7 +311,19 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
                 pd.dismiss();
             }
             txtJson = result;
-            getOptimisedroute();
+            getOptimisedRoute();
+            getPollyLines();
+            drawPollyLines();
+
+            //going about this wrong, need to start new activity with order then start new map i think0
+            android.support.v4.app.FragmentManager manager = getSupportFragmentManager();
+
+            FragmentTransaction transaction = manager.beginTransaction();
+            transaction.add(R.id.address_list_fragment, AddressFragment.newInstance(optimisedAddresses)).addToBackStack("tag");
+            transaction.hide(manager.findFragmentById(R.id.map));
+            transaction.commit();
+
+
         }
     }
 
@@ -262,25 +351,15 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
     @SuppressLint("MissingPermission")
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case 1: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
-                    //Permission Granted
-                    gpsTracker = new GPSTracker(this);
-                    if (gpsTracker.canGetLocation) {
-                        mMap.setMyLocationEnabled(true);
-                        myLocation = new LatLng(gpsTracker.getLatitude(), gpsTracker.getLongitude());
-                    } else {
-                        // permission denied, boo! Disable the
-                        // functionality that depends on this permission.
-                    }
-                    return;
-                }
-                // other 'case' lines to check for other
-                // permissions this app might request
+        // If request is cancelled, the result arrays are empty.
+        if (grantResults.length > 0
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            //Permission Granted
+            gpsTracker = new GPSTracker(this);
+            if (gpsTracker.canGetLocation) {
+                mMap.setMyLocationEnabled(true);
+                myLocation = new LatLng(gpsTracker.getLatitude(), gpsTracker.getLongitude());
             }
         }
     }
@@ -290,9 +369,6 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
         mMap = googleMap;
         //get locations on seperate thread
         new AsyncShowLocations().execute(pair);
-
-        //get prompt for start location and add to map
-        getStartLocation();
     }
 
 
@@ -447,7 +523,10 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
 
             addresses = getAddresses();
             latLngs = getLocationFromAddress(addresses);
-
+            while (latLngs.contains(null)) {
+                latLngs.clear();
+                latLngs = getLocationFromAddress(addresses);
+            }
             return Pair.create(addresses, latLngs);
         }
 
@@ -462,6 +541,9 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
             if (pd.isShowing()){
                 pd.dismiss();
             }
+
+            //get prompt for start location and add to map
+            getStartLocation();
         }
     }
 
@@ -473,6 +555,7 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
             LatLng latLng = latLngs.get(i);
 
             MarkerOptions marker = new MarkerOptions().position(latLng).title(address);
+
             markers.add(marker);
             //Put marker on map on that LatLng
             mMap.addMarker(marker);
@@ -505,6 +588,7 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
         Job[] jobs = db.myDao().getAllJobs();
         for (Job job : jobs) {
             Addresses.add(job.getAddress() + " " + job.getPostcode());
+            jobID.add(job.getJobID());
         }
         return Addresses;
     }
