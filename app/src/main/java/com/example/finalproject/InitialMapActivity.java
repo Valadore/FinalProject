@@ -7,6 +7,7 @@ import android.app.FragmentManager;
 import android.app.ProgressDialog;
 import android.arch.persistence.room.Room;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Address;
@@ -66,6 +67,7 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
     private GoogleMap mMap;
     private AppDatabase db;
     private Button btnOptimise;
+    private Button btnContinue;
     private LatLng startLocation;
     private LatLng endLocation;
 
@@ -132,6 +134,7 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
                     10, mLocationListener);
         }
 
+        btnContinue = findViewById(R.id.btn_Continue);
         btnOptimise = findViewById(R.id.btn_Optimise);
         btnOptimise.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -186,8 +189,9 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
                 optimisedAddresses.add(addresses.get(optimised));
                 optimisedLatLngs.add(latLngs.get(optimised));
                 optimisedJobID.add(jobID.get(optimised - 1));
-                db.myDao().updateJobLatlng(latLngs.get(optimised - 1).toString(), jobID.get(optimised - 1));
-                db.myDao().updateJobOrder(optimised  - 1, jobID.get(optimised  - 1));
+
+                db.myDao().updateJobLatlng(latLngs.get(optimised).toString(), jobID.get(optimised - 1));
+                db.myDao().updateJobOrder(i, jobID.get(optimised  - 1));
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -209,7 +213,7 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
 
             rectOptions.color(Color.argb(100,0,0,255));
             rectOptions.width(25);
-            Polyline polyline = mMap.addPolyline(rectOptions);
+            mMap.addPolyline(rectOptions);
         }
     }
 
@@ -311,19 +315,23 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
                 pd.dismiss();
             }
             txtJson = result;
+            Log.d("JSON!!", "onPostExecute: " + txtJson);
             getOptimisedRoute();
             getPollyLines();
             drawPollyLines();
 
-            //going about this wrong, need to start new activity with order then start new map i think0
-            android.support.v4.app.FragmentManager manager = getSupportFragmentManager();
+            btnOptimise.setVisibility(View.GONE);
+            btnContinue.setVisibility(View.VISIBLE);
 
-            FragmentTransaction transaction = manager.beginTransaction();
-            transaction.add(R.id.address_list_fragment, AddressFragment.newInstance(optimisedAddresses)).addToBackStack("tag");
-            transaction.hide(manager.findFragmentById(R.id.map));
-            transaction.commit();
-
-
+            btnContinue.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    Intent myIntent = new Intent(InitialMapActivity.this, OptimisedListActivity.class);
+                    myIntent.putExtra("jsonText", txtJson);
+                    myIntent.putExtra("startLocation", startLocation);
+                    myIntent.putExtra("endLocation", endLocation);
+                    startActivity(myIntent);
+                }
+            });
         }
     }
 

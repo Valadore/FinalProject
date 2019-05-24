@@ -108,5 +108,6 @@
     <string name="title_activity_barcode_scan">Barcode List</string>
     <string name="title_activity_initial_map">Map</string>
     <string name="available_manifests">Available Manifests</string>
+    <string name="title_activity_begin_route">Map</string>
 
 </resources>
