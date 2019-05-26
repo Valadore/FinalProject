@@ -219,7 +219,8 @@ public class BeginRouteActivity extends FragmentActivity implements OnMapReadyCa
                                         {
                                             Bitmap signature = mSig.getBitmap();
                                             String fileName = "Sig_" + parcel.getParcelBarcode() + ".jpg";
-                                            saveToInternalStorage(signature, fileName);
+
+                                            new saveToInternalStorage(signature, fileName).execute();
 
                                             parcel.setStatus("Complete");
                                             parcel.setSignatureFileName(fileName);
@@ -251,8 +252,19 @@ public class BeginRouteActivity extends FragmentActivity implements OnMapReadyCa
         });
     }
 
-    private void saveToInternalStorage(Bitmap bitmapImage, String fileName){
-        ContextWrapper cw = new ContextWrapper(getApplicationContext());
+    private class saveToInternalStorage extends AsyncTask<Void, Void, Void>
+    {
+        Bitmap bitmapImage;
+        String fileName;
+        saveToInternalStorage(Bitmap bitmapImage, String fileName) {
+            // list all the parameters like in normal class define
+            this.bitmapImage = bitmapImage;
+            this.fileName = fileName;
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            ContextWrapper cw = new ContextWrapper(getApplicationContext());
         // path to /data/data/yourapp/app_data/imageDir
         File directory = cw.getDir("imageDir", Context.MODE_PRIVATE);
         // Create imageDir
@@ -271,6 +283,8 @@ public class BeginRouteActivity extends FragmentActivity implements OnMapReadyCa
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+            return null;
         }
     }
 
