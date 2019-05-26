@@ -1,11 +1,19 @@
 package com.example.finalproject;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.arch.persistence.room.Room;
+import android.content.Context;
+import android.content.ContextWrapper;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.design.widget.FloatingActionButton;
@@ -13,9 +21,10 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.util.Pair;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -28,13 +37,15 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -45,11 +56,11 @@ import java.util.Objects;
 public class BeginRouteActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
-    Intent intent = getIntent();
     String txtJson;
     private LatLng startLocation;
     private LatLng endLocation;
     private LatLng lastLocation;
+    private LatLng myLocation = null; //currentLocation
     ProgressDialog pd;
     private AppDatabase db;
     private List<MarkerOptions> markers = new ArrayList<>();
@@ -60,6 +71,7 @@ public class BeginRouteActivity extends FragmentActivity implements OnMapReadyCa
     private FloatingActionButton btnNavigate;
     private LinearLayout btnPanel;
     private TextView destination;
+    private TextView numParcels;
     private ArrayList<Job> jobs;
     private int jobNumber;
     private String uri;
@@ -82,7 +94,29 @@ public class BeginRouteActivity extends FragmentActivity implements OnMapReadyCa
         btnComplete = findViewById(R.id.btn_complete);
         btnPanel = findViewById(R.id.btn_panel);
         destination = findViewById(R.id.txt_destination);
+        numParcels = findViewById(R.id.txt_num_parcels);
         btnNavigate = findViewById(R.id.btn_navigate);
+
+        LocationListener mLocationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+                myLocation = new LatLng(location.getLatitude(), location.getLongitude());
+            }
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+            }
+            @Override
+            public void onProviderEnabled(String provider) {
+            }
+            @Override
+            public void onProviderDisabled(String provider) {
+            }
+        };
+        LocationManager mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000,
+                    10, mLocationListener);
+        }
 
     }
 
@@ -114,8 +148,13 @@ public class BeginRouteActivity extends FragmentActivity implements OnMapReadyCa
         beginStage(jobNumber);
         btnFail.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                jobNumber++;
-                beginStage(jobNumber);
+                failJob(jobNumber);
+            }
+        });
+
+        btnComplete.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                completeJob(jobNumber);
             }
         });
 
@@ -126,44 +165,216 @@ public class BeginRouteActivity extends FragmentActivity implements OnMapReadyCa
                 startActivity(intent);
             }
         });
+    }
+    private CaptureSignatureView mSig;
+    private LinearLayout mContent;
 
+    private void completeJob(final int stage)
+    {
+        findViewById(R.id.sig_container).setVisibility(View.VISIBLE);
+        btnPanel.setVisibility(View.GONE);
+        mContent = findViewById(R.id.get_sig);
+        mSig = new CaptureSignatureView(this, null);
+        mContent.addView(mSig, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
 
+        Button btnGetSig = findViewById(R.id.btn_save_sig);
+        btnGetSig.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                // get prompts.xml view
+                LayoutInflater li = LayoutInflater.from(BeginRouteActivity.this);
+                View promptsView = li.inflate(R.layout.prompt_getstart, null);
+
+                AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
+                        BeginRouteActivity.this);
+
+                // set prompts.xml to alertdialog builder
+                alertDialogBuilder.setView(promptsView);
+
+                final EditText userInput = promptsView
+                        .findViewById(R.id.editTextDialogUserInput);
+                userInput.setVisibility(View.GONE);
+
+                TextView alertTxt = promptsView.findViewById(R.id.alertTxtView);
+                alertTxt.setText("Accept Signature?");
+
+                // set dialog message
+                alertDialogBuilder
+                        .setCancelable(false)
+                        .setPositiveButton("Confirm",
+                                new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog,int id) {
+
+                                        db = Room.databaseBuilder(getApplicationContext(),
+                                                AppDatabase.class, "sessionDatabase").allowMainThreadQueries().build();
+                                        //update job
+                                        Job job = jobs.get(stage);
+                                        job.setStatus("Complete");
+                                        db.myDao().updateJob(job);
+
+                                        //update parcels
+                                        Parcel[] parcels = db.myDao().getParcelsFromJob(job.getJobID());
+
+                                        //update parcels and save data
+                                        for(Parcel parcel: parcels)
+                                        {
+                                            Bitmap signature = mSig.getBitmap();
+                                            String fileName = "Sig_" + parcel.getParcelBarcode() + ".jpg";
+                                            saveToInternalStorage(signature, fileName);
+
+                                            parcel.setStatus("Complete");
+                                            parcel.setSignatureFileName(fileName);
+                                            parcel.setGPS(myLocation.toString());
+
+                                            db.myDao().updateParcel(parcel);
+                                        }
+
+                                        mContent.removeAllViews();
+                                        findViewById(R.id.sig_container).setVisibility(View.GONE);
+                                        btnPanel.setVisibility(View.VISIBLE);
+                                        jobNumber++;
+                                        beginStage(jobNumber);
+                                    }
+                                })
+                        .setNegativeButton("Cancel",
+                                new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog,int id) {
+                                        mSig.ClearCanvas();
+                                        dialog.cancel();
+                                    }
+                                });
+
+                // create alert dialog
+                AlertDialog alertDialog = alertDialogBuilder.create();
+                // show it
+                alertDialog.show();
+            }
+        });
     }
 
+    private void saveToInternalStorage(Bitmap bitmapImage, String fileName){
+        ContextWrapper cw = new ContextWrapper(getApplicationContext());
+        // path to /data/data/yourapp/app_data/imageDir
+        File directory = cw.getDir("imageDir", Context.MODE_PRIVATE);
+        // Create imageDir
+        File mypath=new File(directory,fileName);
+
+        FileOutputStream fos = null;
+        try {
+            fos = new FileOutputStream(mypath);
+            // Use the compress method on the BitMap object to write image to the OutputStream
+            bitmapImage.compress(Bitmap.CompressFormat.PNG, 100, fos);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                fos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void failJob(final int stage)
+    {
+        // get prompts.xml view
+        LayoutInflater li = LayoutInflater.from(BeginRouteActivity.this);
+        View promptsView = li.inflate(R.layout.prompt_getstart, null);
+
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
+                BeginRouteActivity.this);
+
+        // set prompts.xml to alertdialog builder
+        alertDialogBuilder.setView(promptsView);
+
+        final EditText userInput = promptsView
+                .findViewById(R.id.editTextDialogUserInput);
+        userInput.setVisibility(View.GONE);
+
+        TextView alertTxt = promptsView.findViewById(R.id.alertTxtView);
+        alertTxt.setText("Confirm fail all parcels for job?");
+
+        // set dialog message
+        alertDialogBuilder
+                .setCancelable(false)
+                .setPositiveButton("Confirm",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog,int id) {
+                                jobs.get(stage).setStatus("Failed");
+                                db = Room.databaseBuilder(getApplicationContext(),
+                                        AppDatabase.class, "sessionDatabase").allowMainThreadQueries().build();
+                                db.myDao().updateJob(jobs.get(stage));
+
+                                Parcel[] parcels = db.myDao().getParcelsFromJob(jobs.get(stage).getJobID());
+                                for (Parcel parcel : parcels)
+                                {
+                                    parcel.setStatus("Failed");
+                                    db.myDao().updateParcel(parcel);
+                                }
+                                jobNumber++;
+                                beginStage(jobNumber);
+                            }
+                        })
+                .setNegativeButton("Cancel",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog,int id) {
+                                dialog.cancel();
+                            }
+                        });
+
+        // create alert dialog
+        AlertDialog alertDialog = alertDialogBuilder.create();
+        // show it
+        alertDialog.show();
+    }
     private void beginStage(int stage)
     {
         mMap.clear();
         markers.clear();
-        String address = jobs.get(stage).getAddress();
+        if (stage < jobs.size())
+        {
+            String address = jobs.get(stage).getAddress();
+            destination.setText("Destination: " + address);
 
-        destination.setText("Destination: " + address);
-        String temp = jobs.get(stage).getLatlng();
-        temp = temp.replaceAll("lat/lng: \\(", "");
-        temp = temp.replaceAll("\\)", "");
+            db = Room.databaseBuilder(getApplicationContext(),
+                    AppDatabase.class, "sessionDatabase").allowMainThreadQueries().build();
+            int numPar = db.myDao().getParcelsFromJob( jobs.get(stage).getJobID()).length;
+            numParcels.setText("Number of Parcels: " + numPar);
+            String temp = jobs.get(stage).getLatlng();
+            temp = temp.replaceAll("lat/lng: \\(", "");
+            temp = temp.replaceAll("\\)", "");
 
-        String[] latlong =  temp.split(",");
-        double latitude = Double.parseDouble(latlong[0]);
-        double longitude = Double.parseDouble(latlong[1]);
-        LatLng newLocation = new LatLng(latitude,longitude);
+            String[] latlong =  temp.split(",");
+            double latitude = Double.parseDouble(latlong[0]);
+            double longitude = Double.parseDouble(latlong[1]);
+            LatLng newLocation = new LatLng(latitude,longitude);
 
-        MarkerOptions marker = new MarkerOptions().position(newLocation).title(address);
-        markers.add(marker);
-        //Put marker on map on that LatLng
-        mMap.addMarker(marker);
+            MarkerOptions marker = new MarkerOptions().position(newLocation).title(address);
+            markers.add(marker);
+            //Put marker on map on that LatLng
+            mMap.addMarker(marker).showInfoWindow();
 
-        marker = new MarkerOptions()
-                .position(lastLocation)
-                .title("Start")
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
-        markers.add(marker);
-        //Put marker on map on that LatLng
-        mMap.addMarker(marker);
+            marker = new MarkerOptions()
+                    .position(lastLocation)
+                    .title("Start")
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
+            markers.add(marker);
+            //Put marker on map on that LatLng
+            mMap.addMarker(marker);
 
+            drawPollyLine(pollyLines.get(stage));
+            lastLocation = newLocation;
+            zoomMap();
+            uri = "https://www.google.com/maps/dir/?api=1&destination=" + temp;
+        } else
+        {
+            jobsFinished();
+        }
+    }
 
-        drawPollyLine(pollyLines.get(stage));
-        lastLocation = newLocation;
-        zoomMap();
-        uri = "https://www.google.com/maps/dir/?api=1&destination=" + temp;
+    private void jobsFinished()
+    {
+        Intent myIntent = new Intent(BeginRouteActivity.this, AllJobsFinishedActivity.class);
+        startActivity(myIntent);
     }
 
     private class AsyncGetJobs extends AsyncTask<ArrayList<Job>, Void, ArrayList<Job>>
@@ -313,7 +524,7 @@ public class BeginRouteActivity extends FragmentActivity implements OnMapReadyCa
 
         //Animate and Zoom on that map location
         LatLngBounds bounds = builder.build();
-        int padding = 100; // offset from edges of the map in pixels
+        int padding = 300; // offset from edges of the map in pixels
         CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
         mMap.animateCamera(cu);
     }

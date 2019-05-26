@@ -3,7 +3,6 @@ package com.example.finalproject;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
-import android.app.FragmentManager;
 import android.app.ProgressDialog;
 import android.arch.persistence.room.Room;
 import android.content.DialogInterface;
@@ -16,14 +15,11 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
-import android.provider.Telephony;
-import android.support.annotation.LayoutRes;
+
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
-import android.support.v4.app.FragmentTransaction;
-import android.text.Layout;
 import android.util.Log;
 import android.util.Pair;
 import android.view.LayoutInflater;
@@ -42,9 +38,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.android.gms.plus.model.people.Person;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -74,16 +68,14 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
     private List<String> addresses = new ArrayList<>();
     private List<LatLng> latLngs = new ArrayList<>();
     private List<String> optimisedAddresses = new ArrayList<>();
-    private List<LatLng> optimisedLatLngs = new ArrayList<>();
     private List<MarkerOptions> markers = new ArrayList<>();
     private List<String> jobID = new ArrayList<>();
-    private List<String> optimisedJobID = new ArrayList<>();
 
     String txtJson;
     ProgressDialog pd;
 
     @Override
-    public void onBackPressed(){
+    public void onBackPressed() {
         android.support.v4.app.FragmentManager fm = getSupportFragmentManager();
         if (fm.getBackStackEntryCount() > 0) {
             Log.i("MainActivity", "popping backstack");
@@ -95,7 +87,7 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
     }
 
     //create a paired list first is adresss second is latlongs
-    private Pair<List<String>, List<LatLng> > pair = Pair.create(addresses, latLngs);
+    private Pair<List<String>, List<LatLng>> pair = Pair.create(addresses, latLngs);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,8 +100,6 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
             @Override
             public void onLocationChanged(Location location) {
                 myLocation = new LatLng(location.getLatitude(), location.getLongitude());
-                SupportMapFragment supportMapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
-                supportMapFragment.getMapAsync(InitialMapActivity.this);
             }
 
             @Override
@@ -173,25 +163,21 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
         });
     }
 
-    private void getOptimisedRoute()
-    {
-        JSONObject obj = null;
+    private void getOptimisedRoute() {
+        JSONObject obj;
         try {
             obj = new JSONObject(txtJson);
             JSONArray optimizedWaypoints = obj.getJSONArray("optimizedWaypoints");
             Log.d("TESTING!!", "optimizedWaypoints: " + optimizedWaypoints);
 
-            for(int i=0;i<optimizedWaypoints.length(); i++)
-            {
+            for (int i = 0; i < optimizedWaypoints.length(); i++) {
                 String temp = optimizedWaypoints.getString(i);
                 JSONObject obj2 = new JSONObject(temp);
                 int optimised = Integer.parseInt(obj2.getString("optimizedIndex")) + 1;
                 optimisedAddresses.add(addresses.get(optimised));
-                optimisedLatLngs.add(latLngs.get(optimised));
-                optimisedJobID.add(jobID.get(optimised - 1));
 
                 db.myDao().updateJobLatlng(latLngs.get(optimised).toString(), jobID.get(optimised - 1));
-                db.myDao().updateJobOrder(i, jobID.get(optimised  - 1));
+                db.myDao().updateJobOrder(i, jobID.get(optimised - 1));
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -199,57 +185,53 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
         Log.d("TESTING!!", "optimizedWaypoints: " + optimisedAddresses);
     }
 
-    private void drawPollyLines()
-    {
+    private void drawPollyLines() {
         for (ArrayList<String> line : pollyLines) {
             PolylineOptions rectOptions = new PolylineOptions();
-            for (String subline : line)
-            {
-                String[] latlong =  subline.split(",");
+            for (String subline : line) {
+                String[] latlong = subline.split(",");
                 double latitude = Double.parseDouble(latlong[0]);
                 double longitude = Double.parseDouble(latlong[1]);
-                rectOptions.add(new LatLng(latitude,longitude));
+                rectOptions.add(new LatLng(latitude, longitude));
             }
 
-            rectOptions.color(Color.argb(100,0,0,255));
+            rectOptions.color(Color.argb(100, 0, 0, 255));
             rectOptions.width(25);
             mMap.addPolyline(rectOptions);
         }
     }
 
     private ArrayList<ArrayList<String>> pollyLines = new ArrayList<>();
+
     private void getPollyLines() {
-        JSONObject obj = null;
+        JSONObject obj;
         try {
             obj = new JSONObject(txtJson);
             JSONArray routes = obj.optJSONArray("routes");
             Log.d("TESTING!!", "routes: " + routes);
             Log.d("TESTING!!", "size of routes: " + routes.length());
 
-            for(int i=0;i<routes.length(); i++)
-                {
-                  String tempLegs = routes.getString(i);
-                  JSONObject obj2 = new JSONObject(tempLegs);
-                  JSONArray legs = obj2.getJSONArray("legs");
-                    for (int y=0;y<legs.length();y++)
-                    {
-                        String tempPoints = legs.getString(y);
-                        JSONObject obj3 = new JSONObject(tempPoints);
-                        JSONArray points = obj3.getJSONArray("points");
-                        ArrayList<String> legArray = new ArrayList<>();
-                        for (int u = 0;u<points.length();u++)
-                        {
-                            String temp = points.getString(u);
+            for (int i = 0; i < routes.length(); i++) {
+                String tempLegs = routes.getString(i);
+                JSONObject obj2 = new JSONObject(tempLegs);
+                JSONArray legs = obj2.getJSONArray("legs");
+                for (int y = 0; y < legs.length(); y++) {
+                    String tempPoints = legs.getString(y);
+                    JSONObject obj3 = new JSONObject(tempPoints);
+                    JSONArray points = obj3.getJSONArray("points");
+                    ArrayList<String> legArray = new ArrayList<>();
+                    for (int u = 0; u < points.length(); u++) {
+                        String temp = points.getString(u);
 
-                            temp = temp.replaceAll("\\{\"latitude\":", "");
-                            temp = temp.replaceAll("\"longitude\":", "");
-                            temp = temp.replaceAll("\\}", "");
+                        temp = temp.replaceAll("\\{\"latitude\":", "");
+                        temp = temp.replaceAll("\"longitude\":", "");
+                        temp = temp.replaceAll("\\}", "");
 
-                            legArray.add(temp);
-                        }
-                        pollyLines.add(legArray);
+                        legArray.add(temp);
                     }
+                    pollyLines.add(legArray);
                 }
+            }
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -284,7 +266,7 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
                 String line = "";
 
                 while ((line = reader.readLine()) != null) {
-                    buffer.append(line+"\n");
+                    buffer.append(line + "\n");
                     Log.d("Response: ", "> " + line);   //here u ll get whole response...... :-)
                 }
                 return buffer.toString();
@@ -311,7 +293,7 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
         @Override
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
-            if (pd.isShowing()){
+            if (pd.isShowing()) {
                 pd.dismiss();
             }
             txtJson = result;
@@ -366,15 +348,23 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
             //Permission Granted
             gpsTracker = new GPSTracker(this);
             if (gpsTracker.canGetLocation) {
-                mMap.setMyLocationEnabled(true);
                 myLocation = new LatLng(gpsTracker.getLatitude(), gpsTracker.getLongitude());
             }
         }
+        SupportMapFragment supportMapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        supportMapFragment.getMapAsync(InitialMapActivity.this);
     }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
+                (this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        mMap.setMyLocationEnabled(true);
         //get locations on seperate thread
         new AsyncShowLocations().execute(pair);
     }

@@ -1,14 +1,19 @@
 package com.example.finalproject;
 
+import android.app.AlertDialog;
 import android.arch.persistence.room.Room;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -50,10 +55,45 @@ public class DownloadManifestsActivity extends AppCompatActivity {
 
                 //send a list of manifests to download
                 List<String> manifests = adapter.getManifests();
-                buildManifests(manifests);
+                if (manifests.size() == 0)
+                {
+                    LayoutInflater li = LayoutInflater.from(DownloadManifestsActivity.this);
+                    View promptsView = li.inflate(R.layout.prompt_getstart, null);
 
-                Intent myIntent = new Intent(DownloadManifestsActivity.this, BarcodeListActivity.class);
-                startActivity(myIntent);
+                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
+                            DownloadManifestsActivity.this);
+
+                    // set prompts.xml to alertdialog builder
+                    alertDialogBuilder.setView(promptsView);
+
+                    final EditText userInput = promptsView
+                            .findViewById(R.id.editTextDialogUserInput);
+                    userInput.setVisibility(View.GONE);
+
+                    TextView alertTxt = promptsView.findViewById(R.id.alertTxtView);
+                    alertTxt.setText("You must select at least 1 manifest!");
+
+                    // set dialog message
+                    alertDialogBuilder
+                            .setCancelable(false)
+                            .setNegativeButton("OK",
+                                    new DialogInterface.OnClickListener() {
+                                        public void onClick(DialogInterface dialog,int id) {
+                                            dialog.cancel();
+                                        }
+                                    });
+
+                    // create alert dialog
+                    AlertDialog alertDialog = alertDialogBuilder.create();
+                    // show it
+                    alertDialog.show();
+                } else
+                {
+                    buildManifests(manifests);
+
+                    Intent myIntent = new Intent(DownloadManifestsActivity.this, BarcodeListActivity.class);
+                    startActivity(myIntent);
+                }
             }
         });
     }

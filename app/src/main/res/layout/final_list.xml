@@ -7,8 +7,9 @@
         android:id="@+id/list_item_string"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
         android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true"
+        android:clickable="true"
         android:padding="8dp"
         android:textSize="18sp"
         android:textStyle="bold" />

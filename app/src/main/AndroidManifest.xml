@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.finalproject">
-
     <!--
          The ACCESS_COARSE/FINE_LOCATION permissions are not required to use
          Google Maps Android API v2, but you must specify either coarse or fine
@@ -13,6 +12,7 @@
     <uses-permission android:name="android.permission.READ_PROFILE" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
 
     <application
         android:allowBackup="true"
@@ -23,6 +23,11 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
+        <activity android:name=".AllJobsFinishedActivity"
+            android:label="All Parcels Finished"
+            android:theme="@style/AppTheme.NoActionBar">
+
+        </activity>
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
              (See the file "res/values/google_maps_api.xml").
@@ -42,7 +47,10 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.finalproject.OptimisedListActivity" />
         </activity>
-        <activity android:name=".OptimisedListActivity" />
+        <activity android:name=".OptimisedListActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:label="Optimised">
+        </activity>
         <activity android:name=".BarcodeScanActivity" />
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.

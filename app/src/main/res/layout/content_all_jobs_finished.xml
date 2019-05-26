@@ -8,23 +8,21 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/txt_complected"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Optimised Route"
-        android:textAlignment="center"
-        android:textSize="30sp" />
+        android:text="TextView"
+        android:textSize="24sp" />
 
     <ListView
-        android:id="@+id/address_list"
+        android:id="@+id/finalList"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="1" />
+        android:layout_weight="1"/>
 
-    <Button xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/button_continue"
+    <Button
+        android:id="@+id/btn_sign_out"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="@string/button_continue" />
+        android:text="Finish and Sign out" />
 </LinearLayout>

@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center_horizontal"
     android:orientation="vertical"
-
     tools:context=".InitialMapActivity">
 
 
@@ -18,27 +17,6 @@
         android:layout_height="match_parent"
         tools:context=".InitialMapActivity" >
 
-        <Button
-            android:id="@+id/btn_Optimise"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="top"
-            android:padding="16dp"
-            android:text="Optimise"
-            android:textAlignment="center"
-            android:textStyle="bold"
-            android:visibility="gone" />
-        <Button
-            android:id="@+id/btn_Continue"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="top"
-            android:padding="16dp"
-            android:text="Continue"
-            android:textAlignment="center"
-            android:textStyle="bold"
-            android:visibility="gone" />
-
         <ProgressBar
             android:id="@+id/login_progress"
             style="?android:attr/progressBarStyleLarge"
@@ -49,4 +27,25 @@
 
     </fragment>
 
-</LinearLayout>
+    <Button
+        android:id="@+id/btn_Optimise"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:padding="16dp"
+        android:text="Optimise"
+        android:textAlignment="center"
+        android:textStyle="bold"
+        android:visibility="gone" />
+    <Button
+        android:id="@+id/btn_Continue"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:padding="16dp"
+        android:text="Continue"
+        android:textAlignment="center"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
+</RelativeLayout>

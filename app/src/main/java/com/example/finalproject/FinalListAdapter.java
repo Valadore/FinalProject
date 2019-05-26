@@ -1,7 +1,6 @@
 package com.example.finalproject;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,13 +8,13 @@ import android.widget.BaseAdapter;
 import android.widget.ListAdapter;
 import android.widget.TextView;
 
-import java.util.List;
+import java.util.ArrayList;
 
-public class AddressListAdapter extends BaseAdapter implements ListAdapter {
-    private List<String> list;
+public class FinalListAdapter extends BaseAdapter implements ListAdapter {
+    private ArrayList<Job> list;
     private Context context;
 
-    AddressListAdapter(List<String> list, Context context) {
+    FinalListAdapter(ArrayList<Job> list, Context context) {
         this.list = list;
         this.context = context;
     }
@@ -40,13 +39,12 @@ public class AddressListAdapter extends BaseAdapter implements ListAdapter {
         View view = convertView;
         if (view == null) {
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            Log.d("HELP", "getView: We made it this far");
-            view = inflater.inflate(R.layout.address_list, null);
+            view = inflater.inflate(R.layout.final_list, null);
         }
 
         //Handle TextView and display string from your list
         TextView listItemText = view.findViewById(R.id.list_item_string);
-        listItemText.setText((position + 1) + ": " + list.get(position));
+        listItemText.setText(list.get(position).getAddress() + " - " + list.get(position).getStatus());
 
         return view;
     }

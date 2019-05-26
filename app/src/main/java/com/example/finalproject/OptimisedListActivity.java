@@ -4,6 +4,7 @@ import android.arch.persistence.room.Room;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -19,19 +20,20 @@ import java.util.List;
 import java.util.Objects;
 
 public class OptimisedListActivity extends AppCompatActivity {
-    private ArrayList<Job> optimisedJobs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_optimised_list);
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
         Intent intent = getIntent();
         final String txtJson = Objects.requireNonNull(intent.getExtras()).getString("jsonText");
         final LatLng startLocation = (LatLng) Objects.requireNonNull(intent.getExtras()).get("startLocation");
         final LatLng endLocation = (LatLng) Objects.requireNonNull(intent.getExtras()).get("endLocation");
 
-        optimisedJobs = getOptimisedList();
+        ArrayList<Job> optimisedJobs = getOptimisedList();
         ArrayList<String> stringList = new ArrayList<>();
 
         for (Job job : optimisedJobs)
