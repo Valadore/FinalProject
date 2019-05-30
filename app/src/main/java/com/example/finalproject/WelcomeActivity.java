@@ -39,5 +39,4 @@ public class WelcomeActivity extends AppCompatActivity {
                 "use this text.";
         return msg;
     }
-
 }

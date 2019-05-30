@@ -558,7 +558,6 @@ public class InitialMapActivity extends FragmentActivity implements OnMapReadyCa
             //Put marker on map on that LatLng
             mMap.addMarker(marker);
         }
-
         zoomMap();
     }
 
